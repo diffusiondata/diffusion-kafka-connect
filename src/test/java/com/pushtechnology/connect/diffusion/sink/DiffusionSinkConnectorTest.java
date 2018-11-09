@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.pushtechnology.connect.diffusion.config.DiffusionConfig;
+import com.pushtechnology.diffusion.client.topics.details.TopicType;
 
 public class DiffusionSinkConnectorTest {
 	private DiffusionSinkConnector connector = new DiffusionSinkConnector();
@@ -27,7 +28,7 @@ public class DiffusionSinkConnectorTest {
 	@Test
 	public void testTaskConfigs() {
 		connector.start(props);
-		
+
 		List<Map<String, String>> taskConfigs = connector.taskConfigs(1);
 		
 		assertEquals(taskConfigs.size(), 1);
