@@ -11,7 +11,7 @@ These instructions assume you are using [Maven](https://maven.apache.org/).
 
 1.  Clone the repository:
 
-    `git clone https://github.com/pushtechnology/diffusion-kafka-connector`
+    `git clone https://github.com/pushtechnology/diffusion-kafka-connect`
 
 2.  Make the jar that contains the connector:
 
