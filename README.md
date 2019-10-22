@@ -5,6 +5,7 @@ The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is
 
 This adapter is verified Gold by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
 
+![Gold verified Confluent integration](/img/verified-gold.jpg)
 
 
 ### Building
