@@ -1,9 +1,11 @@
 ### Introduction
 
-The Diffusion Kafka Connector is a connector to be used with [Kafka Connect](http://kafka.apache.org/documentation.html#connect).
-Source and Sink connectors are provided to publish messages from [Kafka](http://kafka.apache.org) to 
-[Diffusion](https://www.pushtechnology.com) and vice versa. This Connector is compatible with both Diffusion Enterprise 
-(6.0 and above) and Diffusion Cloud platforms.
+The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is a connector to be used with [Kafka Connect](https://www.confluent.io/confluent-platform-push-technology). Source and sink [connectors](https://www.confluent.io/hub/push/push-connector) are provided to publish messages from [Kafka](http://kafka.apache.org) to 
+[Diffusion](https://www.pushtechnology.com) and vice versa.
+
+This adapter is verified Gold by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
+
+
 
 ### Building
 
@@ -21,7 +23,7 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### Pre-Running Steps
 
-1.  Setup an instance of [Diffusion](https://docs.pushtechnology.com/docs/6.1.2/manual/html/quickstartguide/qsg/qsg_get_diffusion.html) or [Diffusion Cloud](https://docs.pushtechnology.com/cloud/latest/manual/html/cloud/intro/cloud_getting_started.html) that will be 
+1.  Set up an instance of [Diffusion](https://docs.pushtechnology.com/docs/latest/manual/html/quickstartguide/qsg/qsg_get_diffusion.html) or [Diffusion Cloud](https://docs.pushtechnology.com/cloud/latest/manual/html/cloud/intro/cloud_getting_started.html) that will be 
     accessible from the machine on which you are running Kafka.
 
 2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
