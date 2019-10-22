@@ -28,7 +28,7 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
     that this connector will be configured with. If you intend to run the sink connector,
-    ensure that this principal has sufficient permissions to create topics / publish
+    ensure that this principal has sufficient permissions to create topics and publish
     values under paths that will be mapped from Kafka.
 
 ### Running a Connector
@@ -84,7 +84,7 @@ used to resolve a distinct topic against which to publish. This allows for messa
 destination topics based on associated metadata. Patterns may contain one or more tokens, which will be replaced by values (if available) 
 at runtime. If no mapping is required, then simply provide a concrete topic path to establish a direct 1:1 mapping.
 
-When mapping paths for Source Connectors, invalid characters will be converted to the allowable set of Kafka topic characters (alphanumeric, `_`).
+When mapping paths for source connectors, invalid characters will be converted to the allowable set of Kafka topic characters (alphanumeric, `_`).
 If the mapping contains a token referencing the inbound Diffusion topic path (which will likely contain `/` characters), these will be converted
 to underscores automatically.
 
@@ -126,7 +126,7 @@ The sink connector handles the conversion in the following way:
 	Diffusion-compatible JSON format
 *   Messages published to Diffusion will be done so in an optimistic fashion,
     with topics created as necessary. Any topics created by the Source Connector
-    will be of the JSON TopicType. If a destination topic does not exist, and
+    will be of the JSON topic type. If a destination topic does not exist, and
     the source connector is unable to create it, an error will be raised and 
     the connector will be stopped. 
 *   Maps that have non-string keys will result in an error, since JSON only
@@ -137,7 +137,7 @@ The sink connector handles the conversion in the following way:
 The source connector takes a similar approach in handling the conversion
 from a Diffusion JSON message into a SourceRecord with a relevant Schema.
 
-*   The connector can subscribe to JSON, String, Int64 or Float topic types.
+*   The connector can subscribe to JSON, string, int64 or float topic types.
 *   The topic path that the Diffusion message was received on will be set
 	as the key for Kafka, with an associated String schema.
 *   The JSON body will be deserialised into a Kafka-appropriate type. Where
@@ -154,12 +154,12 @@ from a Diffusion JSON message into a SourceRecord with a relevant Schema.
 The delivery guarantees of Kafka do not map directly to Diffusion's implicit delivery modes.
 Furthermore, since Diffusion does not have the concept of user-specific message order or 
 topic partitions - instead relying solely on a last-write-wins model per topic - parallelism
-of Connector tasks is difficult to achieve. The general behaviour should be understood as:
+of connector tasks is difficult to achieve. The general behaviour should be understood as:
 
-*   The Diffusion Adapter should have a single task for both Sink or Source. This is a result 
+*   The Diffusion Kafka Adapter should have a single task for both Sink or Source. This is a result 
     of being unable to rationally distribute addressed topics across multiple tasks, given that 
     the semantics of Diffusion's topic selectors are resolved at runtime.
-*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Adapter
+*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Kafka Adapter
     with separate configurations to target subsets of source or destination topics.  
 *   Message order is dependent on the upstream source. The source connector is guaranteed to deliver
     messages in-order for a given source topic, but is unable to provide Kafka with useful offsets
@@ -167,7 +167,7 @@ of Connector tasks is difficult to achieve. The general behaviour should be unde
     of a given source task.
 *   The sink connector will commit offsets of messages on regular intervals when it is confirmed that
     they have been published successfully to Diffusion. It is possible for some offsets to not be 
-    committed despite being published, if the Diffusion connection is lost immediately after publication
+    committed, despite being published, if the Diffusion connection is lost immediately after publication
     but before the Connect framework commits offsets.
  
 ### License
