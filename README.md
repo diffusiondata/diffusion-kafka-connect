@@ -23,11 +23,11 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### Pre-Running Steps
 
-1.  Set up an instance of [Diffusion](https://docs.pushtechnology.com/docs/latest/manual/html/quickstartguide/qsg/qsg_get_diffusion.html) or [Diffusion Cloud](https://docs.pushtechnology.com/cloud/latest/manual/html/cloud/intro/cloud_getting_started.html) that will be 
+1.  Set up an instance of [Diffusion](https://www.pushtechnology.com/developers/release/latest/) or [Diffusion Cloud](https://www.pushtechnology.com/developers/cloud/latest/) that will be 
     accessible from the machine on which you are running Kafka.
 
 2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
-    that this connector will be configured with. If you intend to run the Sink connector,
+    that this connector will be configured with. If you intend to run the sink connector,
     ensure that this principal has sufficient permissions to create topics / publish
     values under paths that will be mapped from Kafka.
 
@@ -36,7 +36,7 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 1.  Copy the diffusion-connector.jar to whichever directory you have configured Kafka
     to load plugins from.
 
-2.  If running this connector within Confluent Platform, simply use the Dashboard to 
+2.  If running this connector within Confluent Platform, simply use the dashboard to 
     create a new sink/source connector. The dashboard will provide a configuration
     UI that contains all required fields.
     
@@ -49,8 +49,8 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### DiffusionConnector Configs
 
-In addition to the configs supplied by the Kafka Connect API, the Diffusion
-Connector supports the following configs:
+In addition to the configs supplied by the Kafka Connect API, the 
+adapter supports the following configs:
 
 #### Common Connector config
 
@@ -117,17 +117,17 @@ Assuming a SinkRecord with a topic of "bar", a key of "baz", a key schema versio
 
 ### Schema Support and Data Model
 
-The Diffusion Connector will send and receive JSON values, with support for primitive data types 
+The adapter will send and receive JSON values, with support for primitive data types 
 (e.g. integer, float, or string types), as well as Arrays, Maps and Structs. 
 
 The sink connector handles the conversion in the following way:
 
 *   All values (primitive, Arrays, Maps, Structs) will be serialised to a 
 	Diffusion-compatible JSON format
-*   Messages published to Diffusion will be done so in an optimistic-fashion,
+*   Messages published to Diffusion will be done so in an optimistic fashion,
     with topics created as necessary. Any topics created by the Source Connector
     will be of the JSON TopicType. If a destination topic does not exist, and
-    the Source Connector is unable to create it, an error will be raised and 
+    the source connector is unable to create it, an error will be raised and 
     the connector will be stopped. 
 *   Maps that have non-string keys will result in an error, since JSON only
 	allows for primitive-keyed maps/objects
@@ -156,21 +156,21 @@ Furthermore, since Diffusion does not have the concept of user-specific message 
 topic partitions - instead relying solely on a last-write-wins model per topic - parallelism
 of Connector tasks is difficult to achieve. The general behaviour should be understood as:
 
-*   The Diffusion Connector should have a single task for both Sink or Source. This is a result 
+*   The Diffusion Adapter should have a single task for both Sink or Source. This is a result 
     of being unable to rationally distribute addressed topics across multiple tasks, given that 
     the semantics of Diffusion's topic selectors are resolved at runtime.
-*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Connector
+*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Adapter
     with separate configurations to target subsets of source or destination topics.  
-*   Message order is dependent on the upstream source. The Source Connector is guaranteed to deliver
+*   Message order is dependent on the upstream source. The source connector is guaranteed to deliver
     messages in-order for a given source topic, but is unable to provide Kafka with useful offsets
-    since the Diffusion Client does not have access to ordering data that exists outside the lifespan
-    of a given Source Task.
-*   The Sink Connector will commit offsets of messages on regular intervals when it is confirmed that
+    since the Diffusion client does not have access to ordering data that exists outside the lifespan
+    of a given source task.
+*   The sink connector will commit offsets of messages on regular intervals when it is confirmed that
     they have been published successfully to Diffusion. It is possible for some offsets to not be 
     committed despite being published, if the Diffusion connection is lost immediately after publication
     but before the Connect framework commits offsets.
  
 ### License
 
-This connector is available under the Apache License 2.0.
+This adapter is available under the Apache License 2.0.
  
