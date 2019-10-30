@@ -4,7 +4,7 @@ The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is
 
 Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
-This adapter is verified Gold by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
+The adapter is [verified Gold](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
 
 ![Gold verified Confluent integration](/img/verified-gold.jpg)
 
