@@ -2,7 +2,7 @@
 
 The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is a connector to be used with [Kafka Connect](https://www.confluent.io/confluent-platform-push-technology). Source and sink connectors are provided to publish messages from [Kafka](http://kafka.apache.org) to [Diffusion](https://www.pushtechnology.com) and vice versa. 
 
-Connecting a Diffusion server enables you to stream data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
+Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
 This adapter is verified Gold by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
 
