@@ -57,9 +57,7 @@ public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
                 .password(config.password())
                 .listener(listener)
                 .noReconnection()
-                .serverHost(config.host())
-                .serverPort(config.port())
-                .open();
+                .open(config.diffusionUrl());
 
         return new DiffusionClientImpl(session);
     }

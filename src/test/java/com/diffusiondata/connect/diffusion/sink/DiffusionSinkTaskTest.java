@@ -98,8 +98,7 @@ public class DiffusionSinkTaskTest {
         when(factory.connect(isA(SinkConfig.class), isA(Listener.class)))
             .thenReturn(client);
 
-        props.put(DiffusionConfig.HOST, "localhost");
-        props.put(DiffusionConfig.PORT, "8080");
+        props.put(DiffusionConfig.DIFFUSION_URL, "ws://localhost:8080");
         props.put(DiffusionConfig.USERNAME, "admin");
         props.put(DiffusionConfig.PASSWORD, "password");
         props.put(DiffusionConfig.DIFFUSION_DESTINATION, "topic");

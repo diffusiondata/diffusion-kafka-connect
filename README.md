@@ -1,17 +1,22 @@
-### Introduction
+# Diffusion Kafka Connector
+
+_**Diffusion** is an Intelligent Data Platform that includes everything you need to consume,
+enrich, and deliver event-data to power your event-driven real-time applications._
 
 The [Diffusion Kafka Connector](https://github.com/diffusiondata/diffusion-kafka-connect) is a Kafka connector application 
 that can be used to integrate Kafka with Diffusion server. Source and sink connectors are provided to publish 
 messages from [Kafka](http://kafka.apache.org) topics to [Diffusion](https://www.diffusiondata.com) topics and vice versa. 
 
-Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
+Connecting a Diffusion server enables real-time streaming of data stored in Kafka 
+to edge clients like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
-The adapter is [verified](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both on prem Diffusion and Diffusion Cloud, versions 6.9 and above.
+The connector is [verified](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both on prem Diffusion and Diffusion Cloud, versions 6.9 and above.
 
-### Building
+## Building
 
-These instructions assume you are using [Maven](https://maven.apache.org/).
-
+### Prerequisites
+- Maven (min 3.8)
+- Java (min java 11)
 1.  Clone the repository:
 
     `git clone https://github.com/pushtechnology/diffusion-kafka-connect`
@@ -20,71 +25,167 @@ These instructions assume you are using [Maven](https://maven.apache.org/).
 
     `mvn clean package`
 
-The resulting jar is at target/diffusion-kafka-connector.jar
+The resulting jar is at `target/diffusion-kafka-connector.jar`
 
-### Pre-Running Steps
+This will also create `target/components/packages/DiffusionData-Diffusion-Connector-1.0.0.zip` file.
+This `.zip` file can be used to add the Diffusion Kafka connector in the Confluent platform on prem 
+or in Confluent cloud.
 
-1.  Set up an instance of [Diffusion](https://www.diffusiondata.com/developers/release/latest/) or [Diffusion Cloud](https://www.diffusiondata.com/developers/cloud/latest/) that should be accessible from the machine on which you are running Kafka.
+_Note_: This version of the connector uses Kafka connect API version: 3.9.0.
+
+## Pre-requisite to run the connector
+
+1. Java environment (min Java 11) 
+
+2. Set up an instance of [Diffusion](https://www.diffusiondata.com/developers/release/latest/) or [Diffusion Cloud](https://www.diffusiondata.com/developers/cloud/latest/) that should be accessible from the machine on which you are running Kafka.
 
 2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
     that this connector will be configured with. If you intend to run the sink connector,
     ensure that this principal has sufficient permissions to create topics and publish
     values under paths that will be mapped from Kafka.
 
-### Running a Connector
+## Running the Connector
 
-1.  Copy the diffusion-kafka-connector.jar to whichever directory you have configured Kafka
-    to load plugins from.
+## Locally with Confluent stack
 
-2.  If running this connector within Confluent Platform, use the dashboard to 
-    create a new sink/source connector. The dashboard will provide a configuration
-    UI that contains all required fields.
-    
-    > NOTE: If using the [confluent docker compose file](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml), 
-the path where the plugin (diffusion-kafka-connector.jar) is available can be mounted in the volume of the `connect` docker container in the path configured for connectors via `CONNECT_PLUGIN_PATH` var, as follows :
+To run the connector locally, run the provided sample `docker-compose.yml` file 
+to start up Kafka, Diffusion and other required components. This docker file has 
+been created using the one provided by [confluent](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml).
 
-    ```JSON
-      ...
-      ...
-      connect:
-        image: cnfldemos/cp-server-connect-datagen:0.6.4-7.6.0
-        environment:
-          ...
-          CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
-        volumes:
-          # The diffusion-kafka-connector.jar would be in the "/local/kafka/connectPlugin/plugins" path
-          - /local/kafka/connectPlugin/plugins:/usr/share/confluent-hub-components
+> **_NOTE:_** The `diffusion-kafka-connector.jar` file created during the build should be 
+ added into the folder specified in the volume mount path for the `connect` containers.
+
+The connector instances can then be added either via the control centre or by using the Kafka connect REST API. 
+
+### Via Control Centre
+
+Once the stack is up and running, the Confluent control centre can be accessed 
+via `http://localhost:9021/clusters`. An instance of the Diffusion source and sink 
+connector can be added in the `Connect` tab of the control centre.
+
+> **_NOTE:_** If *DiffusionSinkConnector* and *DiffusionSourceConnector* are not listed in the list of available connectors, it's likely because of invalid mount of the connector folder or missing JAR file.
+
+A connector instance can be added using the provided UI or by uploading the connector config file. The sample config files 
+are provided in the `config` folder, that are also specified below.
+
+### Via REST API
+It is also possible to add and manage connector instances using REST APIs. See [here](https://docs.confluent.io/platform/current/connect/references/restapi.html) for details.
+
+Here's the sample configuration to add a Sink connector via the REST API or in via the Control centre:
+
+```json
+{
+  "name": "DiffusionSinkConnector",
+  "config": {
+    "tasks.max": "1",
+    "connector.class": "com.diffusiondata.connect.diffusion.sink.DiffusionSinkConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "topics": "kafka",
+    "diffusion.url": "ws://diffusion:8080",
+    "diffusion.username": "admin",
+    "diffusion.password": "password",
+    "diffusion.destination": "kafka/${topic}/${key}"
+  }
+}
+```
+
+Here's the sample configuration to add a Source connector the REST API or in via the Control centre:
+
+```json
+{
+  "name": "DiffusionSourceConnector",
+  "config": {
+    "tasks.max": "1",
+    "connector.class": "com.diffusiondata.connect.diffusion.source.DiffusionSourceConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "kafka.topic": "kafka",
+    "diffusion.url": "ws://diffusion:8080",
+    "diffusion.username": "admin",
+    "diffusion.password": "password",
+    "diffusion.selector": "?source/kafka/.*"
+  }
+}
+```
+
+
+## In Confluent Cloud as Custom Connector 
+The connector can be used in Confluent Cloud as a [Custom Connector](https://docs.confluent.io/cloud/current/connectors/bring-your-connector/overview.html).
+
+The following steps expect that you have created a Confluent Cloud account and 
+configured the cluster in one of the [supported regions](https://docs.confluent.io/cloud/current/connectors/bring-your-connector/custom-connector-fands.html#cc-byoc-regions.). 
+
+1. Build the `.zip` folder as specified in the [build](#Building) section above.
+2. In the Kafka cloud instance, Select: 
+   > Environment > cluster > Connectors
+3. Click "Add plugin"
+4. Give the plugin a recognizable name, and set the Connector class to `com.diffusiondata.connect.diffusion.sink.DiffusionSinkConnector` for connector of *Sink* type or `com.diffusiondata.connect.diffusion.source.DiffusionSourceConnector` for connector of *Source* type. 
+5. Upload the `.zip` file from the first step.
+6. Add `diffusion.password` as a `Sensitive properties`.
+
+You can then add an instance of the connector. 
+1. Specify the API key. For this, you can use an existing key or create a new one.
+2. Provide the JSON configuration for the connector. 
+
+    #### Sample JSON configuration for the Source connector
+    ```json
+    {
+    "name": "DiffusionSourceConnector",
+    "tasks.max": "1",
+    "connector.class": "com.diffusiondata.connect.diffusion.source.DiffusionSourceConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "kafka.topic": "kafka",
+    "diffusion.url": "ws://localhost:8080",
+    "diffusion.username": "admin",
+    "diffusion.password": "password",
+    "diffusion.selector": "?source/kafka/.*"
+    }
     ```
-    
-3.  If you are running this connector against vanilla Kafka, create a configuration
-	file for the Diffusion Kafka connector and copy it to the place where you will run 
-	Kafka connect. The configuration should set up the proper Kafka and Diffusion 
-	topic patterns, as well as connection and authentication details for Diffusion.
-    Sample configuration files for the source and sink connectors are provided
-    at configs/.
 
-### DiffusionConnector Configs
+    #### Sample JSON configuration for the Sink connector
+    ```json
+    {
+      "name": "DiffusionSinkConnector",
+      "tasks.max": "1",
+      "connector.class": "com.diffusiondata.connect.diffusion.sink.DiffusionSinkConnector",
+      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false",
+      "topics": "kafka",
+      "diffusion.url": "ws://localhost:8080",
+      "diffusion.username": "admin",
+      "diffusion.password": "password",
+      "diffusion.destination": "kafka/${topic}/${key}"
+    }
+    ```   
+
+3. In the `Connection Endpoints` section, specify the Diffusion server URL to be added in the allow-list.
+4. After submitting the form, the connector instance will be active in a few minutes.
+
+## DiffusionConnector Configs
 
 In addition to the configs supplied by the Kafka Connect API, the 
-adapter supports the following configs:
+connector supports the following configs:
 
 #### Common Connector config
 
-| Config | Value Range | Default | Description |
-|--------|-------------|---------|-------------|
+| Config             | Value Range | Default | Description                                                          |
+|--------------------|-------------|---------|----------------------------------------------------------------------|
 | diffusion.username | String | REQUIRED (No default) | The name of the principal with which to authenticate with Diffusion. |
-| diffusion.password | String | REQUIRED (No default) | The password with which to authenticate with Diffusion. |
-| diffusion.host | String | REQUIRED (No default) | The hostname with which to connect to Diffusion. |
-| diffusion.port | String | REQUIRED (No default) | The port against which to connect to Diffusion. |
+| diffusion.password | String | REQUIRED (No default) | The password with which to authenticate with Diffusion.              |
+| diffusion.url      | String | REQUIRED (No default) | The full URL with which to connect to Diffusion.                     |
 
 #### Source Connector
 
-| Config | Value Range | Default | Description |
-|--------|-------------|---------|-------------|
-| diffusion.selector | String | REQUIRED (No default) | The topic selector used to subscribe to source topics in Diffusion. May be any valid topic selector, e.g. "?topics/source/.*/json-format". |
-| diffusion.poll.interval | Int | 1000 | The back-off interval to wait (in milliseconds) when there are no messages to return to Kafka. |
-| diffusion.poll.size | Int | 128 | The maximum number of messages to batch when pushing to Kafka. | 
-| kafka.topic | String | REQUIRED (No default) | The pattern to be used when mapping Diffusion messages to destination Kafka topics. |
+| Config | Value Range | Default | Description                                                                                                                              |
+|--------|-------------|---------|------------------------------------------------------------------------------------------------------------------------------------------|
+| diffusion.selector | String | REQUIRED (No default) | The topic selector used to subscribe to source topics in Diffusion. Can be any valid topic selector, e.g. "?topics/source/.*/json-format". |
+| diffusion.poll.interval | Int | 1000 | The back-off interval to wait (in milliseconds) when there are no messages to return to Kafka.                                           |
+| diffusion.poll.size | Int | 128 | The maximum number of messages to batch when pushing to Kafka.                                                                           | 
+| kafka.topic | String | REQUIRED (No default) | The pattern to be used when mapping Diffusion messages to destination Kafka topics.                                                      |
 
 #### Sink Connector
 
@@ -113,7 +214,7 @@ to underscores automatically.
 | `${topic}` | Sink and Source |  The topic of a given Kafka or Diffusion message. |
 
 #### Examples - Source Connector
-Assuming a JSON value received a topic of "foo/bar":
+Assuming a JSON value received from a Diffusion topic of "foo/bar":
 
 | Pattern | Result |
 |---------|--------|
@@ -133,7 +234,7 @@ Assuming a SinkRecord with a topic of "bar", a key of "baz", a key schema versio
 
 ### Schema Support and Data Model
 
-The adapter will send and receive JSON values, with support for primitive data types 
+The connector will send and receive JSON values, with support for primitive data types 
 (e.g. integer, float, or string types), as well as Arrays, Maps and Structs. 
 
 The sink connector handles the conversion in the following way:
@@ -153,7 +254,7 @@ The sink connector handles the conversion in the following way:
 The source connector takes a similar approach in handling the conversion
 from a Diffusion JSON message into a SourceRecord with a relevant Schema.
 
-*   The connector can subscribe to JSON, string, int64 or float topic types.
+*   The connector can subscribe to JSON, string, int64 or double topic types.
 *   The topic path that the Diffusion message was received on will be set
 	as the key for Kafka, with an associated String schema.
 *   The JSON body will be deserialised into a Kafka-appropriate type. Where
@@ -172,10 +273,10 @@ Furthermore, since Diffusion does not have the concept of user-specific message 
 topic partitions - instead relying solely on a last-write-wins model per topic - parallelism
 of connector tasks is difficult to achieve. The general behaviour should be understood as:
 
-*   The Diffusion Kafka Adapter should have a single task for both Sink or Source. This is a result 
+*   The Diffusion Kafka Connector should have a single task for both Sink or Source. This is a result 
     of being unable to rationally distribute addressed topics across multiple tasks, given that 
     the semantics of Diffusion's topic selectors are resolved at runtime.
-*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Kafka Adapter
+*   To parallelise operations, it is recommended to run multiple instances of the Diffusion Kafka Connector
     with separate configurations to target subsets of source or destination topics.  
 *   Message order is dependent on the upstream source. The source connector is guaranteed to deliver
     messages in-order for a given source topic, but is unable to provide Kafka with useful offsets
@@ -188,5 +289,5 @@ of connector tasks is difficult to achieve. The general behaviour should be unde
  
 ### License
 
-This adapter is available under the Apache License 2.0.
+This connector is available under the Apache License 2.0.
  

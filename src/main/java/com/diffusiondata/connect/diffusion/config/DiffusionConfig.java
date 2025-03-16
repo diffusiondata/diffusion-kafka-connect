@@ -37,8 +37,7 @@ public class DiffusionConfig extends AbstractConfig {
 
     public static final String USERNAME = "diffusion.username";
     public static final String PASSWORD = "diffusion.password";
-    public static final String HOST = "diffusion.host";
-    public static final String PORT = "diffusion.port";
+    public static final String DIFFUSION_URL = "diffusion.url";
 
     public static final int POLL_INTERVAL_DEFAULT = 1000;
     public static final String POLL_INTERVAL = "diffusion.poll.interval";
@@ -53,23 +52,14 @@ public class DiffusionConfig extends AbstractConfig {
     private static ConfigDef base() {
         return new ConfigDef()
             .define(
-                HOST,
+                DIFFUSION_URL,
                 STRING,
                 HIGH,
-                "The hostname of the Diffusion instance to connect to",
+                "The full URL of the Diffusion instance to connect to",
                 CONNECTION_GROUP,
                 0,
                 LONG,
-                "Diffusion Hostname")
-            .define(
-                PORT,
-                INT,
-                HIGH,
-                "The port of the Diffusion instance to connect to",
-                CONNECTION_GROUP,
-                1,
-                MEDIUM,
-                "Diffusion Port")
+                "Diffusion URL")
             .define(
                 USERNAME,
                 STRING,
@@ -152,12 +142,8 @@ public class DiffusionConfig extends AbstractConfig {
         return getPassword(PASSWORD).value();
     }
 
-    public String host() {
-        return getString(HOST);
-    }
-
-    public int port() {
-        return getInt(PORT);
+    public String diffusionUrl() {
+        return getString(DIFFUSION_URL);
     }
 
     public static class SourceConfig extends DiffusionConfig {

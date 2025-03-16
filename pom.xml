@@ -5,7 +5,7 @@
 
     <groupId>com.diffusiondata.diffusion.adapters</groupId>
     <artifactId>diffusion-kafka-connect</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>Diffusion Kafka Connector</name>
     <description>Connector to Diffusion for use with Kafka Connect</description>
 
@@ -24,7 +24,7 @@
         <checkstyle.version>9.3</checkstyle.version>
         <spotbugs.version>4.2.3</spotbugs.version>
         <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
-		<io.confluent.version>0.12.0</io.confluent.version>
+        <io.confluent.version>0.12.0</io.confluent.version>
 
     </properties>
 
@@ -57,6 +57,7 @@
                         <artifactId>slf4j-api</artifactId>
                     </exclusion>
                 </exclusions>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -161,24 +162,34 @@
                             <goal>kafka-connect</goal>
                         </goals>
                         <configuration>
-                            <title>Kafka Connect Diffusion</title>
-                            <documentationUrl>https://docs.diffusiondata.com
-                            </documentationUrl>
+                            <title>Diffusion Kafka Connector</title>
+                            <documentationUrl>https://github.com/diffusiondata/diffusion-kafka-connect</documentationUrl>
+                            <name>Diffusion-Connector</name>
+                            <version>1.0.0</version>
+
                             <description>
-                                The Diffusion Connector allows you to send data
-                                from
-                                Kafka to Diffusion, and vice-versa.
+                                The Diffusion Kafka Connector is a Kafka Connect
+                                plug-in that allows web, mobile, and IoT clients
+                                to consume and send real-time and event-driven
+                                data that is stored as rich data structures
+                                within Kafka - with optimal bandwidth
+                                efficiency, at scale, and in real time. It
+                                includes a source connector for publishing
+                                real-time Diffusion topic updates to Kafka
+                                topics, as well as a sink connector that
+                                broadcasts messages from one or multiple Kafka
+                                topics to Diffusion topics.
 
-                                Messages received from Kafka will be serialised
-                                to JSON topics, which
-                                can then be consumed
-                                by any Diffusion clients.
-
-                                Updates published to JSON topics in Diffusion
-                                can be converted to
-                                Kafka-compatible values,
-                                and then published to Kafka topics with
-                                the appropriate schema.
+                                The Diffusion Kafka Connector supports primitive
+                                values, arrays, maps and structs, as well as
+                                dynamic mapping between Diffusion and Kafka
+                                topic paths. The Diffusion Real Time API
+                                Management platform, available in-the-cloud, on
+                                premise, or in hybrid configurations, lets you
+                                integrate data sources, apply views, secure
+                                access, and optimize delivery of data anywhere,
+                                via Web, mobile, &amp; satellite connections to
+                                applications, systems, and devices.
                             </description>
 
                             <componentTypes>
@@ -186,17 +197,28 @@
                                 <componentType>source</componentType>
                             </componentTypes>
 
-                            <ownerUsername>diffusiondata</ownerUsername>
-                            <ownerType>organization</ownerType>
+                            <sourceUrl>https://github.com/diffusiondata/diffusion-kafka-connect</sourceUrl>
+
+                            <ownerUsername>DiffusionData</ownerUsername>
                             <ownerName>DiffusionData</ownerName>
+                            <ownerType>organization</ownerType>
                             <ownerUrl>https://www.diffusiondata.com/</ownerUrl>
+
+                            <confluentControlCenterIntegration>true</confluentControlCenterIntegration>
+
+                            <supportProviderName>DiffusionData</supportProviderName>
+                            <supportSummary>For any support and queries contact DiffusionData</supportSummary>
+                            <supportUrl>https://www.diffusiondata.com/</supportUrl>
+
+                            <logo>img/DiffusionData-Logo-Primary.svg</logo>
+                            <ownerLogo>img/Diffusion-Logo-Primary.svg</ownerLogo>
 
                             <tags>
                                 <tag>diffusion</tag>
+                                <tag>diffusiondata</tag>
+                                <tag>push</tag>
+                                <tag>push technology</tag>
                             </tags>
-
-                            <confluentControlCenterIntegration>true
-                            </confluentControlCenterIntegration>
                         </configuration>
                     </execution>
                 </executions>
@@ -205,7 +227,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.3</version>
+                <version>3.6.0</version>
                 <configuration>
                     <createDependencyReducedPom>true
                     </createDependencyReducedPom>
