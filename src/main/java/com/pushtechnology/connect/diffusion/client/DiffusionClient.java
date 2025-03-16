@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2018 Push Technology Ltd.
+ * Copyright (C) 2018,2025 Push Technology Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ package com.pushtechnology.connect.diffusion.client;
 
 import java.util.concurrent.CompletableFuture;
 
-import com.pushtechnology.diffusion.client.features.control.topics.TopicControl.AddTopicResult;
 import com.pushtechnology.diffusion.client.session.Session.State;
 import com.pushtechnology.diffusion.client.topics.details.TopicSpecification;
+import com.pushtechnology.diffusion.client.topics.details.TopicType;
 import com.pushtechnology.diffusion.datatype.Bytes;
 import com.pushtechnology.diffusion.datatype.json.JSON;
 
@@ -60,10 +60,13 @@ public interface DiffusionClient {
 	 * indicating the point of failure. 
 	 * 
 	 * @param topicPath - The topic path to update
+	 * @param topicType - The type of the Diffusion topic
+	 * @param clazz - The class type of the update
 	 * @param value - The value to update
 	 * @return A completable future representing the state of the operation
 	 */
-	<T extends Bytes> CompletableFuture<T> update(String topicPath, T value); 
+	<T extends Bytes> CompletableFuture<T> update(
+		String topicPath, TopicType topicType, Class<T> clazz, T value);
 	
 	/**
 	 * Stream interface for receiving messages from a subscription.
@@ -78,15 +81,5 @@ public interface DiffusionClient {
 		 * @param value The new topic value
 		 */
 		void onMessage(String topicPath, TopicSpecification specification, JSON value);
-	}
-	
-	@FunctionalInterface
-	public interface TopicAdder {
-		CompletableFuture<AddTopicResult> add(String path);
-	}
-	
-	@FunctionalInterface 
-	public interface TopicUpdater<T> {
-		CompletableFuture<T> update(String path, T value);
 	}
 }

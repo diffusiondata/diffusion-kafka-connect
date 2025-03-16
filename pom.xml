@@ -8,21 +8,55 @@
 	<description>Connector to Diffusion for use with Kafka Connect</description>
 
 	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.release>11</maven.compiler.release>
 
-		<diffusion.version>6.1.0</diffusion.version>
-		<mockito.version>1.10.19</mockito.version>
-		<kafka.version>1.1.0</kafka.version>
-		<junit.version>4.12</junit.version>
+		<diffusion.version>6.11.3</diffusion.version>
+		<kafka.version>3.9.0</kafka.version>
+		<log4j-slf4j2-impl.version>2.22.1</log4j-slf4j2-impl.version>
+		<slf4j-api.version>2.0.11</slf4j-api.version>
+
+		<junit-jupiter.version>5.10.1</junit-jupiter.version>
+		<mockito-junit-jupiter.version>4.11.0</mockito-junit-jupiter.version>
+
+		<build-rules.version>1.68</build-rules.version>
+		<checkstyle.version>9.3</checkstyle.version>
+		<spotbugs.version>4.2.3</spotbugs.version>
+		<jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
+
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j2-impl</artifactId>
+				<version>${log4j-slf4j2-impl.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-api</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>connect-api</artifactId>
 			<version>${kafka.version}</version>
 			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -30,81 +64,65 @@
 			<artifactId>diffusion-client</artifactId>
 			<version>${diffusion.version}</version>
 		</dependency>
-
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit-jupiter.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>${junit-jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>${mockito-junit-jupiter.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco-maven-plugin.version}</version>
+					<executions>
+						<execution>
+							<id>pre-unit-test</id>
+							<goals>
+								<goal>prepare-agent</goal>
+							</goals>
+							<configuration>
+								<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
+								<propertyName>surefireArgLine</propertyName>
+							</configuration>
+						</execution>
+						<execution>
+							<id>post-unit-test</id>
+							<phase>test</phase>
+							<goals>
+								<goal>report</goal>
+							</goals>
+							<configuration>
+								<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
+								<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.15</version>
-				<configuration>
-					<argLine>${surefireArgLine}</argLine>
-					<skipTests>${skip.unit.tests}</skipTests>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.15</version>
-				<executions>
-					<execution>
-						<id>integration-tests</id>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<argLine>${failsafeArgLine}</argLine>
-							<skipTests>${skip.integration.tests}</skipTests>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.2</version>
-
-				<executions>
-					<execution>
-						<id>pre-unit-test</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-						<configuration>
-							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<propertyName>surefireArgLine</propertyName>
-						</configuration>
-					</execution>
-					<execution>
-						<id>post-unit-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>io.confluent</groupId>
 				<version>0.10.0</version>
@@ -121,14 +139,14 @@
 								The Diffusion Connector allows you to send data from
 								Kafka to Diffusion, and vice-versa.
 
-								Messages receieved from Kafka will be serialised to JSON topics, which
+								Messages received from Kafka will be serialised to JSON topics, which
 								can then be consumed
 								by any Diffusion clients.
 
 								Updates published to JSON topics in Diffusion can be converted to
 								Kafka-compatible values,
 								and then published to Kafka topics with
-								appropriate schema.
+								the appropriate schema.
 							</description>
 
 							<componentTypes>

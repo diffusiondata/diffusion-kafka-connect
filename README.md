@@ -4,7 +4,7 @@ The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is
 
 Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
-The adapter is [verified Gold](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
+The adapter is [verified Gold](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.9 and above.
 
 ![Gold verified Confluent integration](/img/verified-gold.jpg)
 
@@ -19,7 +19,7 @@ These instructions assume you are using [Maven](https://maven.apache.org/).
 
 2.  Make the jar that contains the connector:
 
-    `mvn package`
+    `mvn clean package`
 
 The resulting jar is at target/diffusion-kafka-connector.jar
 
@@ -35,15 +35,50 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### Running a Connector
 
-1.  Copy the diffusion-connector.jar to whichever directory you have configured Kafka
+1.  Copy the diffusion-kafka-connector.jar to whichever directory you have configured Kafka
     to load plugins from.
 
 2.  If running this connector within Confluent Platform, simply use the dashboard to 
     create a new sink/source connector. The dashboard will provide a configuration
     UI that contains all required fields.
     
+    > NOTE: If using the confluent docker compose file, the path where the plugin (diffusion-kafka-connector.jar) is available can be mounted in the volume of the Connect docker container in the path configured for connectors via `CONNECT_PLUGIN_PATH` var, as follows :
+
+    ```JSON
+      connect:
+        image: cnfldemos/cp-server-connect-datagen:0.6.4-7.6.0
+        hostname: connect
+        container_name: connect
+        depends_on:
+          - broker
+          - schema-registry
+        ports:
+          - "8083:8083"
+        environment:
+          CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
+          CONNECT_REST_ADVERTISED_HOST_NAME: connect
+          CONNECT_GROUP_ID: compose-connect-group
+          CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+          CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+          CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+          CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+          CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+          CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+          CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+          CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+          # CLASSPATH required due to CC-2422
+          CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-7.9.0.jar
+          CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+          CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+          CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+        volumes:
+          - /local/kafka/connectPlugin/plugins:/usr/share/confluent-hub-components
+    ```
+    
 3.  If you are running this connector against vanilla Kafka, create a configuration
-	file for the Diffusion connector and copy it to the place where you will run 
+	file for the Diffusion Kafka connector and copy it to the place where you will run 
 	Kafka connect. The configuration should set up the proper Kafka and Diffusion 
 	topic patterns, as well as connection and authentication details for Diffusion.
     Sample configuration files for the source and sink connectors are provided

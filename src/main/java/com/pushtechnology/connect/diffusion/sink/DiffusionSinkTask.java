@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2018 Push Technology Ltd.
+ * Copyright (C) 2018, 2025 Push Technology Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import com.pushtechnology.connect.diffusion.data.RecordToJSON;
 import com.pushtechnology.diffusion.client.session.Session;
 import com.pushtechnology.diffusion.client.session.Session.Listener;
 import com.pushtechnology.diffusion.client.session.Session.State;
+import com.pushtechnology.diffusion.client.topics.details.TopicType;
 import com.pushtechnology.diffusion.datatype.json.JSON;
 
 public class DiffusionSinkTask extends SinkTask implements Listener {
@@ -84,7 +85,8 @@ public class DiffusionSinkTask extends SinkTask implements Listener {
 				final String topicPath = pathFromRecord(config.diffusionDestination(), record);
 				final JSON value = RecordToJSON.jsonFromRecord(record);
 
-				final CompletableFuture<JSON> result = client.update(topicPath, value);
+				final CompletableFuture<JSON> result =
+					client.update(topicPath, TopicType.JSON, JSON.class, value);
 				
 				markPending(record, result);
 			}
@@ -114,7 +116,7 @@ public class DiffusionSinkTask extends SinkTask implements Listener {
 		
 		pendingForPartition.add(result);
 	}
-	
+
 	@Override
 	public void flush(Map<TopicPartition, OffsetAndMetadata> partitionOffsets) {
 		for (Entry<TopicPartition, OffsetAndMetadata> entry : partitionOffsets.entrySet()) {

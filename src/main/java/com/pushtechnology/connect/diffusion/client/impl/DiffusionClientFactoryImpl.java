@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2018 Push Technology Ltd.
+ * Copyright (C) 2018, 2025 Push Technology Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@
  *******************************************************************************/
 package com.pushtechnology.connect.diffusion.client.impl;
 
-import static com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl.MISSING_TOPIC;
-
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.pushtechnology.connect.diffusion.client.DiffusionClient;
 import com.pushtechnology.connect.diffusion.client.DiffusionClientFactory;
 import com.pushtechnology.connect.diffusion.config.DiffusionConfig;
 import com.pushtechnology.diffusion.client.Diffusion;
 import com.pushtechnology.diffusion.client.callbacks.ErrorReason;
+import com.pushtechnology.diffusion.client.features.NoSuchTopicException;
+import com.pushtechnology.diffusion.client.features.TopicUpdate;
 import com.pushtechnology.diffusion.client.features.Topics;
-import com.pushtechnology.diffusion.client.features.control.topics.TopicControl;
-import com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl;
-import com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl.Updater.UpdateCallback;
 import com.pushtechnology.diffusion.client.session.Session;
 import com.pushtechnology.diffusion.client.session.Session.Listener;
 import com.pushtechnology.diffusion.client.session.Session.State;
@@ -35,6 +36,7 @@ import com.pushtechnology.diffusion.client.topics.details.TopicSpecification;
 import com.pushtechnology.diffusion.client.topics.details.TopicType;
 import com.pushtechnology.diffusion.datatype.Bytes;
 import com.pushtechnology.diffusion.datatype.json.JSON;
+import com.pushtechnology.diffusion.topics.details.TopicSpecificationImpl;
 
 /**
  * Implementation of {@link DiffusionClientFactory}.
@@ -42,6 +44,8 @@ import com.pushtechnology.diffusion.datatype.json.JSON;
  * Constructs {@link DiffusionClient} instances connected to provided server details.
  */
 public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
+	private static final Logger LOG =
+		LoggerFactory.getLogger(DiffusionClientFactoryImpl.class);
 	private static final SessionFactory factory = Diffusion.sessions();
 
 	@Override
@@ -53,30 +57,28 @@ public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
 				.serverHost(config.host())
 				.serverPort(config.port())
 				.open();
-		
+
 		return new DiffusionClientImpl(session);
 	}
-	
+
 	private static class DiffusionClientImpl implements DiffusionClient {
-		private final TopicUpdateControl topicUpdateControl;
-		private final TopicControl topicControl;
+		private final TopicUpdate topicUpdate;
 		private final Topics topics;
-		
+
 		private final Session session;
 
 		protected DiffusionClientImpl(Session session) {
-			topicUpdateControl = session.feature(TopicUpdateControl.class);
-			topicControl = session.feature(TopicControl.class);
+			topicUpdate = session.feature(TopicUpdate.class);
 			topics = session.feature(Topics.class);
-			
+
 			this.session = session;
 		}
-		
+
 		@Override
 		public void close() {
 			session.close();
 		}
-		
+
 		@Override
 		public State getSessionState() {
 			return session.getState();
@@ -90,67 +92,62 @@ public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
 					stream.onMessage(topicPath, specification, newValue);
 				}
 			});
-		
+
 			return topics.subscribe(topicSelector);
 		}
-		
-		@Override
-		public <T extends Bytes> CompletableFuture<T> update(String topicPath, T value) {
-			final CompletableFuture<T> future = new CompletableFuture<>();
-			
-			topicUpdateControl
-				.updater()
-				.update(topicPath, value, new UpdateCallback() {
-					@Override
-					public void onError(ErrorReason errorReason) {
-						if (MISSING_TOPIC.equals(errorReason)) {
-							topicControl.addTopic(topicPath, TopicType.JSON).handle((result, err) -> {
-								if (err != null) {
-									future.completeExceptionally(err);
-								} else {
-									topicUpdateControl
-									.updater()
-									.update(topicPath, value, new UpdateCallback() {
-										@Override
-										public void onError(ErrorReason errorReason) {
-											// Terminal, since we already determined that the topic itself exists
-											future.completeExceptionally(new ErrorReasonException(errorReason));
-										}
-	
-										@Override
-										public void onSuccess() {
-											future.complete(value);
-										}
-									});
-								}
-								
-								return null;
-							});
-						} else {
-							future.completeExceptionally(new ErrorReasonException(errorReason));
-						}
-					}
 
-					@Override
-					public void onSuccess() {
-						future.complete(value);
-					}
-				});
-			
+		@Override
+		public <T extends Bytes> CompletableFuture<T> update(
+			String topicPath, TopicType topicType, Class<T> clazz, T value) {
+
+			final CompletableFuture<T> future = new CompletableFuture<>();
+
+			topicUpdate
+				.set(topicPath, clazz, value)
+				.whenComplete(
+					(result, ex) -> {
+						if(ex == null) {
+							future.complete(value);
+							return;
+						}
+
+						final Throwable cause = ex instanceof CompletionException ?
+							ex.getCause() : ex;
+
+						if (cause instanceof NoSuchTopicException) {
+							addAndSet(
+								topicPath,
+								topicType,
+								clazz,
+								value)
+								.whenComplete((topicCreationResult, throwable) -> {
+									if(throwable != null) {
+										future.completeExceptionally(throwable);
+									} else {
+										future.complete(value);
+									}
+								});
+						}
+						else {
+							LOG.error(
+								"Failed to publish to Diffusion topic " +
+									"path: {}.",
+								topicPath);
+							future.completeExceptionally(ex);
+						}
+					});
 			return future;
 		}
-		
-		public static class ErrorReasonException extends Throwable {
-			private static final long serialVersionUID = 1905000388329387731L;
-			private final ErrorReason errorReason;
-			
-			public ErrorReasonException(ErrorReason errorReason) {
-				this.errorReason = errorReason;
-			}
-			
-			public ErrorReason getErrorReason() {
-				return errorReason;
-			}
+
+		private <T> CompletableFuture<?> addAndSet(
+			String topicPath, TopicType topicType, Class<T> clazz, T value) {
+			return
+				topicUpdate
+					.addAndSet(
+						topicPath,
+						new TopicSpecificationImpl(topicType),
+						clazz,
+						value);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2018 Push Technology Ltd.
+ * Copyright (C) 2018,2025 Push Technology Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,8 +48,9 @@ import com.pushtechnology.repackaged.jackson.dataformat.cbor.CBORGenerator;
  * Parses a SinkRecord that contains a value schema into a Diffusion-compatible JSON instance. 
  */
 public final class RecordToJSON {
-	private static final JSONDataType JSON_TYPE = Diffusion.dataTypes().json();
-	private static final CBORFactory CBOR = new CBORFactory(); 
+	public static JSONDataType JSON_TYPE =
+		Diffusion.dataTypes().json();
+	private static final CBORFactory CBOR = new CBORFactory();
 	
 	/**
 	 * Parse a {@link SinkRecord} instance and return a Diffusion-compatible {@link JSON} value.
