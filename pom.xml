@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.pushtechnology.diffusion.adaptors</groupId>
+	<groupId>com.diffusiondata.diffusion.adaptors</groupId>
 	<artifactId>diffusion-kafka-connect</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Diffusion Kafka Connector</name>
@@ -134,7 +134,7 @@
 						</goals>
 						<configuration>
 							<title>Kafka Connect Diffusion</title>
-							<documentationUrl>https://docs.pushtechnology.com</documentationUrl>
+							<documentationUrl>https://docs.diffusiondata.com</documentationUrl>
 							<description>
 								The Diffusion Connector allows you to send data from
 								Kafka to Diffusion, and vice-versa.
@@ -154,10 +154,10 @@
 								<componentType>source</componentType>
 							</componentTypes>
 
-							<ownerUsername>pushtechnology</ownerUsername>
+							<ownerUsername>diffusiondata</ownerUsername>
 							<ownerType>organization</ownerType>
-							<ownerName>Push Technology</ownerName>
-							<ownerUrl>https://www.pushtechnology.com/</ownerUrl>
+							<ownerName>DiffusionData</ownerName>
+							<ownerUrl>https://www.diffusiondata.com/</ownerUrl>
 
 							<tags>
 								<tag>diffusion</tag>
