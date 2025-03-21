@@ -1,7 +1,6 @@
 package com.diffusiondata.connect.diffusion.data;
 
 import static com.diffusiondata.connect.diffusion.data.JSONToSchemaValue.valueFromJson;
-import static com.diffusiondata.connect.diffusion.data.RecordToJSON.JSON_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
 import static org.apache.kafka.connect.data.SchemaBuilder.array;
@@ -16,7 +15,12 @@ import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.junit.jupiter.api.Test;
 
+import com.pushtechnology.diffusion.client.Diffusion;
+import com.pushtechnology.diffusion.datatype.json.JSONDataType;
+
 public class JSONToSchemaValueTest {
+	private static JSONDataType JSON_TYPE =
+		Diffusion.dataTypes().json();
 
 	@Test
 	public void testPrimitives() throws Exception {

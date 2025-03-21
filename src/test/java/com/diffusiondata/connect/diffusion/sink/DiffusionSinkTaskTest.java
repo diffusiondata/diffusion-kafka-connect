@@ -1,11 +1,10 @@
 package com.diffusiondata.connect.diffusion.sink;
 
-import static com.diffusiondata.connect.diffusion.data.RecordToJSON.JSON_TYPE;
+import static com.diffusiondata.connect.diffusion.SinkRecordBuilder.sinkRecord;
 import static com.pushtechnology.diffusion.client.session.Session.State.CLOSED_BY_SERVER;
 import static com.pushtechnology.diffusion.client.session.Session.State.CONNECTED_ACTIVE;
 import static com.pushtechnology.diffusion.client.session.Session.State.CONNECTING;
 import static com.pushtechnology.diffusion.client.session.Session.State.RECOVERING_RECONNECT;
-import static com.diffusiondata.connect.diffusion.SinkRecordBuilder.sinkRecord;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.kafka.connect.data.SchemaBuilder.array;
@@ -67,9 +66,6 @@ import com.pushtechnology.diffusion.datatype.json.JSON;
 
 @ExtendWith(MockitoExtension.class)
 public class DiffusionSinkTaskTest {
-	private static final JSON DUMMY_JSON =
-		JSON_TYPE.fromJsonString("{\"foo\":\"bar\"}");
-
 	@Mock
 	private DiffusionClientFactory factory;
 

@@ -1,16 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.diffusiondata.diffusion.adaptors</groupId>
+
+	<groupId>com.diffusiondata.diffusion.adapters</groupId>
 	<artifactId>diffusion-kafka-connect</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>Diffusion Kafka Connector</name>
 	<description>Connector to Diffusion for use with Kafka Connect</description>
 
 	<properties>
 		<maven.compiler.release>11</maven.compiler.release>
 
-		<diffusion.version>6.11.3</diffusion.version>
+		<diffusion.version>6.11.5</diffusion.version>
 		<kafka.version>3.9.0</kafka.version>
 		<log4j-slf4j2-impl.version>2.22.1</log4j-slf4j2-impl.version>
 		<slf4j-api.version>2.0.11</slf4j-api.version>
@@ -28,6 +29,23 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.apache.kafka</groupId>
+				<artifactId>connect-api</artifactId>
+				<version>${kafka.version}</version>
+				<scope>provided</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-api</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>com.diffusiondata.diffusion</groupId>
+				<artifactId>diffusion-client-with-dependencies</artifactId>
+				<version>${diffusion.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-slf4j2-impl</artifactId>
 				<version>${log4j-slf4j2-impl.version}</version>
@@ -37,6 +55,24 @@
 						<artifactId>slf4j-api</artifactId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-params</artifactId>
+				<version>${junit-jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito-junit-jupiter.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -49,38 +85,22 @@
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>connect-api</artifactId>
-			<version>${kafka.version}</version>
-			<scope>provided</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
-
 		<dependency>
-			<groupId>com.pushtechnology.diffusion</groupId>
-			<artifactId>diffusion-client</artifactId>
-			<version>${diffusion.version}</version>
+			<groupId>com.diffusiondata.diffusion</groupId>
+			<artifactId>diffusion-client-with-dependencies</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>${junit-jupiter.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
-			<version>${junit-jupiter.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
-			<version>${mockito-junit-jupiter.version}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -125,7 +145,7 @@
 			</plugin>
 			<plugin>
 				<groupId>io.confluent</groupId>
-				<version>0.10.0</version>
+				<version>0.12.0</version>
 				<artifactId>kafka-connect-maven-plugin</artifactId>
 				<executions>
 					<execution>
@@ -212,11 +232,4 @@
 
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>push-repository</id>
-			<url>https://download.pushtechnology.com/maven/</url>
-		</repository>
-	</repositories>
 </project>

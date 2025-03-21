@@ -1,7 +1,7 @@
 ### Introduction
 
 The [Diffusion Kafka Connector](https://github.com/diffusiondata/diffusion-kafka-connect) is a Kafka connector application 
-that can be used to integrate a Kafka cluster with a Diffusion cluster. Source and sink connectors are provided to publish 
+that can be used to integrate Kafka with Diffusion server. Source and sink connectors are provided to publish 
 messages from [Kafka](http://kafka.apache.org) topics to [Diffusion](https://www.diffusiondata.com) topics and vice versa. 
 
 Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
@@ -40,36 +40,16 @@ The resulting jar is at target/diffusion-kafka-connector.jar
     create a new sink/source connector. The dashboard will provide a configuration
     UI that contains all required fields.
     
-    > NOTE: If using the confluent docker compose file, the path where the plugin (diffusion-kafka-connector.jar) is available can be mounted in the volume of the Connect docker container in the path configured for connectors via `CONNECT_PLUGIN_PATH` var, as follows :
+    > NOTE: If using the [confluent docker compose file](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml), 
+the path where the plugin (diffusion-kafka-connector.jar) is available can be mounted in the volume of the `connect` docker container in the path configured for connectors via `CONNECT_PLUGIN_PATH` var, as follows :
 
     ```JSON
+      ...
+      ...
       connect:
         image: cnfldemos/cp-server-connect-datagen:0.6.4-7.6.0
-        hostname: connect
-        container_name: connect
-        depends_on:
-          - broker
-          - schema-registry
-        ports:
-          - "8083:8083"
         environment:
-          CONNECT_BOOTSTRAP_SERVERS: 'broker:29092'
-          CONNECT_REST_ADVERTISED_HOST_NAME: connect
-          CONNECT_GROUP_ID: compose-connect-group
-          CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
-          CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-          CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
-          CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
-          CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-          CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
-          CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-          CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-          CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-          CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-          # CLASSPATH required due to CC-2422
-          CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-7.9.0.jar
-          CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-          CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+          ...
           CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
         volumes:
           # The diffusion-kafka-connector.jar would be in the "/local/kafka/connectPlugin/plugins" path

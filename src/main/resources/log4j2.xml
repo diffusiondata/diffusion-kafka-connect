@@ -37,6 +37,7 @@
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
         </Root>
+        <Logger name="com.diffusiondata.connect" level="info"/>
         <Logger name="com.pushtechnology.diffusion" level="info"/>
         <Logger name="org.apache.kafka" level="info"/>
     </Loggers>

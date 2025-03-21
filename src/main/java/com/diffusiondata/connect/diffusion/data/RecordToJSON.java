@@ -48,7 +48,7 @@ import com.pushtechnology.repackaged.jackson.dataformat.cbor.CBORGenerator;
  * Parses a SinkRecord that contains a value schema into a Diffusion-compatible JSON instance. 
  */
 public final class RecordToJSON {
-	public static JSONDataType JSON_TYPE =
+	private static JSONDataType JSON_TYPE =
 		Diffusion.dataTypes().json();
 	private static final CBORFactory CBOR = new CBORFactory();
 	

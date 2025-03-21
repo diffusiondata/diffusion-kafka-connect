@@ -105,7 +105,7 @@ public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
 				.set(topicPath, clazz, value)
 				.whenComplete(
 					(result, ex) -> {
-						if(ex == null) {
+						if (ex == null) {
 							future.complete(value);
 							return;
 						}
