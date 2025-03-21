@@ -18,19 +18,19 @@ import com.diffusiondata.connect.diffusion.config.DiffusionConfig;
 import com.pushtechnology.diffusion.client.session.Session.Listener;
 
 /**
- * Connection factory for {@link DiffusionClient} instances. 
- * <P>
+ * Connection factory for {@link DiffusionClient} instances.
+ * <p>
  * This factory interface is primarily used for dependency injection in tests.
  */
 public interface DiffusionClientFactory {
-	/**
-	 * Create a new {@link DiffusionClient} instance.
-	 * 
-	 * @param config The config instance containing Diffusion server details
-	 * @param listener The session state listener
-	 * @return A new connected DiffusionClient instance
-	 * 
-	 * @throws Exception If no connection can be established to the remote Diffusion server 
-	 */
-	DiffusionClient connect(DiffusionConfig config, Listener listener) throws Exception;
+    /**
+     * Create a new {@link DiffusionClient} instance.
+     *
+     * @param config   The config instance containing Diffusion server details
+     * @param listener The session state listener
+     * @return A new connected DiffusionClient instance
+     * @throws Exception If no connection can be established to the remote
+     *                   Diffusion server
+     */
+    DiffusionClient connect(DiffusionConfig config, Listener listener) throws Exception;
 }

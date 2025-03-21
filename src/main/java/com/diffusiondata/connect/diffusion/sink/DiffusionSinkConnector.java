@@ -28,43 +28,46 @@ import com.diffusiondata.connect.diffusion.config.DiffusionConfig;
 import com.diffusiondata.connect.diffusion.config.DiffusionConfig.SinkConfig;
 
 public class DiffusionSinkConnector extends SinkConnector {
-	private SinkConfig sinkConfig;
-	private Map<String, String> props;
-	
-	@Override
-	public String version() {
-		return DiffusionConfig.VERSION;
-	}
+    private SinkConfig sinkConfig;
+    private Map<String, String> props;
 
-	@Override
-	public void start(Map<String, String> props) {
-		this.props = props;
-		sinkConfig = new SinkConfig(props);
-	}
+    @Override
+    public String version() {
+        return DiffusionConfig.VERSION;
+    }
 
-	@Override
-	public Class<? extends Task> taskClass() {
-		return DiffusionSinkTask.class;
-	}
+    @Override
+    public void start(Map<String, String> props) {
+        this.props = props;
+        sinkConfig = new SinkConfig(props);
+    }
 
-	@Override
-	public List<Map<String, String>> taskConfigs(int maxTasks) {
-		// Diffusion does not currently support sufficient parallelism primitives to safely
-		// run multiple concurrent tasks in the way that the Connect framework expects. 
-		// We also can't determine ahead of time how many concrete topics a given selector 
-		// will resolve against, and even if we could, that number may change at any point 
-		// in the future 
-		return asList(props);
-	}
+    @Override
+    public Class<? extends Task> taskClass() {
+        return DiffusionSinkTask.class;
+    }
 
-	@Override
-	public void stop() {
-		// No-op
-	}
+    @Override
+    public List<Map<String, String>> taskConfigs(int maxTasks) {
+        /*
+         * Diffusion does not currently support sufficient parallelism
+         * primitives to safely run multiple concurrent tasks in the way that
+         * the Connect framework expects. We also can't determine ahead of
+         * time how many concrete topics a given selector will resolve
+         * against, and even if we could, that number may change at any point
+         * in the future
+         */
+        return asList(props);
+    }
 
-	@Override
-	public ConfigDef config() {
-		return SINK_CONFIG;
-	}
+    @Override
+    public void stop() {
+        // No-op
+    }
+
+    @Override
+    public ConfigDef config() {
+        return SINK_CONFIG;
+    }
 
 }

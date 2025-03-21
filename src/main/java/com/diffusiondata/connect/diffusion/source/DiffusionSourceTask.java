@@ -45,109 +45,128 @@ import com.pushtechnology.diffusion.client.session.Session.Listener;
 import com.pushtechnology.diffusion.client.session.Session.State;
 
 public class DiffusionSourceTask extends SourceTask implements Listener {
-	private static final Logger LOGGER = LoggerFactory.getLogger(DiffusionSourceTask.class);
-	
-	private static final int POLL_RETRIES = 3;
-	
-	private final ConcurrentLinkedQueue<SourceRecord> messages = new ConcurrentLinkedQueue<>();
-	private volatile boolean running = false;
-	
-	private DiffusionClientFactory factory = new DiffusionClientFactoryImpl();
-	private DiffusionClient client;
-	private SourceConfig config;
-	
-	public DiffusionSourceTask() {
-		
-	}
-	
-	/* For testing. */
-	protected DiffusionSourceTask(DiffusionClientFactory factory) {
-		this.factory = factory;
-	}
-	
-	public String version() {
-		return DiffusionConfig.VERSION;
-	}
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(DiffusionSourceTask.class);
 
-	@Override
-	public void start(Map<String, String> props) {
-		config = new SourceConfig(props);
-		
-		try {
-			client = factory.connect(config, this);
-		} catch (Exception e) {
-			throw new ConnectException("Unable to establish connection to Diffusion", e);
-		}
-		
-		final CompletableFuture<?> sub = client.subscribe(config.diffusionTopic(), (path, spec, value) -> {
-			final String topic = pathFromTopic(config.kafkaTopic(), path);
-			final SchemaAndValue parsed = valueFromJson(value);
-			final Map<String, String> p = singletonMap("topic", path);
-			
-			messages.add(new SourceRecord(
-					p,
-					null,
-					topic, 
-					Schema.STRING_SCHEMA, 
-					path, 
-					parsed.schema(), 
-					parsed.value()));
+    private static final int POLL_RETRIES = 3;
 
-			LOGGER.debug("New message received for: {}", path);
-		});
-		
-		try {
-			sub.get(10, SECONDS);
-		} catch (Exception e) {
-			throw new ConnectException("Unable to subscribe to: " + config.diffusionTopic(), e);
-		}
-	}
-	
-	@Override
-	public List<SourceRecord> poll() throws InterruptedException {
-        final ArrayList<SourceRecord> records = new ArrayList<>(config.pollBatchSize());
+    private final ConcurrentLinkedQueue<SourceRecord> messages =
+        new ConcurrentLinkedQueue<>();
+    private volatile boolean running = false;
+
+    private DiffusionClientFactory factory = new DiffusionClientFactoryImpl();
+    private DiffusionClient client;
+    private SourceConfig config;
+
+    public DiffusionSourceTask() {
+
+    }
+
+    /* For testing. */
+    protected DiffusionSourceTask(DiffusionClientFactory factory) {
+        this.factory = factory;
+    }
+
+    public String version() {
+        return DiffusionConfig.VERSION;
+    }
+
+    @Override
+    public void start(Map<String, String> props) {
+        config = new SourceConfig(props);
+
+        try {
+            client = factory.connect(config, this);
+        }
+        catch (Exception e) {
+            throw new ConnectException(
+                "Unable to establish connection to Diffusion", e);
+        }
+
+        final CompletableFuture<?> sub =
+            client.subscribe(
+                config.diffusionTopic(),
+                (path, spec, value) -> {
+
+                    final String topic = pathFromTopic(config.kafkaTopic(),
+                        path);
+                    final SchemaAndValue parsed = valueFromJson(value);
+                    final Map<String, String> p = singletonMap("topic", path);
+
+                    messages.add(new SourceRecord(
+                        p,
+                        null,
+                        topic,
+                        Schema.STRING_SCHEMA,
+                        path,
+                        parsed.schema(),
+                        parsed.value()));
+
+                    LOGGER.debug("New message received for: {}", path);
+                });
+
+        try {
+            sub.get(10, SECONDS);
+        }
+        catch (Exception e) {
+            throw new ConnectException(
+                "Unable to subscribe to: " + config.diffusionTopic(), e);
+        }
+    }
+
+    @Override
+    public List<SourceRecord> poll() throws InterruptedException {
+        final ArrayList<SourceRecord> records =
+            new ArrayList<>(config.pollBatchSize());
         int retries = 0;
-        
+
         while (retries < POLL_RETRIES && records.isEmpty()) {
-        	for (int i = 0; i < config.pollBatchSize(); ++i) {
-        		final SourceRecord record = messages.poll();
-        		
-        		if (record == null) {
-        			break;
-        		}
-        		
-        		records.add(record);
-        	}
-        	
-        	if (records.isEmpty()) {
-        		sleep(config.pollInterval());
-        		retries++;
-        	}
+            for (int i = 0; i < config.pollBatchSize(); ++i) {
+                final SourceRecord record = messages.poll();
+
+                if (record == null) {
+                    break;
+                }
+
+                records.add(record);
+            }
+
+            if (records.isEmpty()) {
+                sleep(config.pollInterval());
+                retries++;
+            }
         }
-        
-        // If we've exhausted pending messages, and the Diffusion client is disconnected, inform Connect framework
+
+        // If we've exhausted pending messages, and the Diffusion client is
+        // disconnected, inform Connect framework
         if (records.isEmpty() && !running) {
-        	if (client.getSessionState() == State.RECOVERING_RECONNECT) {
-				throw new RetriableException("Diffusion Client is not connected, attempting reconnection");
-			} else {
-				throw new ConnectException("Diffusion Client is closed");
-			}
+            if (client.getSessionState() == State.RECOVERING_RECONNECT) {
+                throw new RetriableException(
+                    "Diffusion Client is not connected, attempting " +
+                        "reconnection");
+            }
+            else {
+                throw new ConnectException("Diffusion Client is closed");
+            }
         }
 
-		return records;
-	}
+        return records;
+    }
 
-	@Override
-	public void stop() {
-		client.close();
-	}
+    @Override
+    public void stop() {
+        client.close();
+    }
 
-	@Override
-	public void onSessionStateChanged(Session session, State oldState, State newState) {
-		if (newState == State.CONNECTED_ACTIVE) {
-			running = true;
-		} else {
-			running = false;
-		}
-	}
+    @Override
+    public void onSessionStateChanged(
+        Session session, State oldState, State newState) {
+
+        if (newState == State.CONNECTED_ACTIVE) {
+            running = true;
+        }
+        else {
+            running = false;
+        }
+    }
 }

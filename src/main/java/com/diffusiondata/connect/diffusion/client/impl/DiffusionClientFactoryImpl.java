@@ -39,114 +39,129 @@ import com.pushtechnology.diffusion.topics.details.TopicSpecificationImpl;
 
 /**
  * Implementation of {@link DiffusionClientFactory}.
- * <P>
- * Constructs {@link DiffusionClient} instances connected to provided server details.
+ * <p>
+ * Constructs {@link DiffusionClient} instances connected to provided server
+ * details.
  */
 public class DiffusionClientFactoryImpl implements DiffusionClientFactory {
-	private static final Logger LOG =
-		LoggerFactory.getLogger(DiffusionClientFactoryImpl.class);
-	private static final SessionFactory factory = Diffusion.sessions();
+    private static final Logger LOG =
+        LoggerFactory.getLogger(DiffusionClientFactoryImpl.class);
 
-	@Override
-	public DiffusionClient connect(DiffusionConfig config, Listener listener) throws Exception {
-		final Session session = factory.principal(config.username())
-				.password(config.password())
-				.listener(listener)
-				.noReconnection()
-				.serverHost(config.host())
-				.serverPort(config.port())
-				.open();
+    private static final SessionFactory factory = Diffusion.sessions();
 
-		return new DiffusionClientImpl(session);
-	}
+    @Override
+    public DiffusionClient connect(DiffusionConfig config, Listener listener) throws Exception {
+        final Session session =
+            factory
+                .principal(config.username())
+                .password(config.password())
+                .listener(listener)
+                .noReconnection()
+                .serverHost(config.host())
+                .serverPort(config.port())
+                .open();
 
-	private static class DiffusionClientImpl implements DiffusionClient {
-		private final TopicUpdate topicUpdate;
-		private final Topics topics;
+        return new DiffusionClientImpl(session);
+    }
 
-		private final Session session;
+    private static class DiffusionClientImpl implements DiffusionClient {
+        private final TopicUpdate topicUpdate;
+        private final Topics topics;
 
-		protected DiffusionClientImpl(Session session) {
-			topicUpdate = session.feature(TopicUpdate.class);
-			topics = session.feature(Topics.class);
+        private final Session session;
 
-			this.session = session;
-		}
+        protected DiffusionClientImpl(Session session) {
+            topicUpdate = session.feature(TopicUpdate.class);
+            topics = session.feature(Topics.class);
 
-		@Override
-		public void close() {
-			session.close();
-		}
+            this.session = session;
+        }
 
-		@Override
-		public State getSessionState() {
-			return session.getState();
-		}
+        @Override
+        public void close() {
+            session.close();
+        }
 
-		@Override
-		public CompletableFuture<?> subscribe(String topicSelector, SubscriptionStream stream) {
-			topics.addStream(topicSelector, JSON.class, new Topics.ValueStream.Default<JSON>() {
-				@Override
-				public void onValue(String topicPath, TopicSpecification specification, JSON oldValue, JSON newValue) {
-					stream.onMessage(topicPath, specification, newValue);
-				}
-			});
+        @Override
+        public State getSessionState() {
+            return session.getState();
+        }
 
-			return topics.subscribe(topicSelector);
-		}
+        @Override
+        public CompletableFuture<?> subscribe(
+            String topicSelector,
+            SubscriptionStream stream) {
 
-		@Override
-		public <T extends Bytes> CompletableFuture<T> update(
-			String topicPath, TopicType topicType, Class<T> clazz, T value) {
+            topics.addStream(
+                topicSelector,
+                JSON.class,
+                new Topics.ValueStream.Default<JSON>() {
+                    @Override
+                    public void onValue(String topicPath,
+                        TopicSpecification specification, JSON oldValue,
+                        JSON newValue) {
+                        stream.onMessage(topicPath, specification, newValue);
+                    }
+                });
 
-			final CompletableFuture<T> future = new CompletableFuture<>();
+            return topics.subscribe(topicSelector);
+        }
 
-			topicUpdate
-				.set(topicPath, clazz, value)
-				.whenComplete(
-					(result, ex) -> {
-						if (ex == null) {
-							future.complete(value);
-							return;
-						}
+        @Override
+        public <T extends Bytes> CompletableFuture<T> update(
+            String topicPath, TopicType topicType, Class<T> clazz, T value) {
 
-						final Throwable cause = ex instanceof CompletionException ?
-							ex.getCause() : ex;
+            final CompletableFuture<T> future = new CompletableFuture<>();
 
-						if (cause instanceof NoSuchTopicException) {
-							addAndSet(
-								topicPath,
-								topicType,
-								clazz,
-								value)
-								.whenComplete((topicCreationResult, throwable) -> {
-									if(throwable != null) {
-										future.completeExceptionally(throwable);
-									} else {
-										future.complete(value);
-									}
-								});
-						}
-						else {
-							LOG.error(
-								"Failed to publish to Diffusion topic " +
-									"path: {}.",
-								topicPath);
-							future.completeExceptionally(ex);
-						}
-					});
-			return future;
-		}
+            topicUpdate
+                .set(topicPath, clazz, value)
+                .whenComplete(
+                    (result, ex) -> {
+                        if (ex == null) {
+                            future.complete(value);
+                            return;
+                        }
 
-		private <T> CompletableFuture<?> addAndSet(
-			String topicPath, TopicType topicType, Class<T> clazz, T value) {
-			return
-				topicUpdate
-					.addAndSet(
-						topicPath,
-						new TopicSpecificationImpl(topicType),
-						clazz,
-						value);
-		}
-	}
+                        final Throwable cause =
+                            ex instanceof CompletionException ?
+                                ex.getCause() : ex;
+
+                        if (cause instanceof NoSuchTopicException) {
+                            addAndSet(
+                                topicPath,
+                                topicType,
+                                clazz,
+                                value)
+                                .whenComplete((topicCreationResult,
+                                    throwable) -> {
+                                    if (throwable != null) {
+                                        future.completeExceptionally(throwable);
+                                    }
+                                    else {
+                                        future.complete(value);
+                                    }
+                                });
+                        }
+                        else {
+                            LOG.error(
+                                "Failed to publish to Diffusion topic " +
+                                    "path: {}.",
+                                topicPath);
+                            future.completeExceptionally(ex);
+                        }
+                    });
+            return future;
+        }
+
+        private <T> CompletableFuture<?> addAndSet(
+            String topicPath, TopicType topicType, Class<T> clazz, T value) {
+            return
+                topicUpdate
+                    .addAndSet(
+                        topicPath,
+                        new TopicSpecificationImpl(topicType),
+                        clazz,
+                        value);
+        }
+    }
 }

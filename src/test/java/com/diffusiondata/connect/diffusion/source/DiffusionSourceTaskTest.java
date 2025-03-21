@@ -49,238 +49,303 @@ import com.pushtechnology.diffusion.datatype.json.JSONDataType;
 
 @ExtendWith(MockitoExtension.class)
 public class DiffusionSourceTaskTest {
-	private final JSONDataType jsonType = Diffusion.dataTypes().json();
+    private final JSONDataType jsonType = Diffusion.dataTypes().json();
 
-	@Mock
-	private DiffusionClientFactory factory;
+    @Mock
+    private DiffusionClientFactory factory;
 
-	@Mock
-	private DiffusionClient client;
+    @Mock
+    private DiffusionClient client;
 
-	@Mock
-	private TopicSpecification topicSpec;
+    @Mock
+    private TopicSpecification topicSpec;
 
-	@Mock
-	private CompletableFuture<?> goodFuture;
+    @Mock
+    private CompletableFuture<?> goodFuture;
 
-	@Captor
-	private ArgumentCaptor<SourceConfig> configCaptor;
+    @Captor
+    private ArgumentCaptor<SourceConfig> configCaptor;
 
-	@Captor
-	private ArgumentCaptor<Listener> listenerCaptor;
+    @Captor
+    private ArgumentCaptor<Listener> listenerCaptor;
 
-	@Captor
-	private ArgumentCaptor<SubscriptionStream> streamCaptor;
+    @Captor
+    private ArgumentCaptor<SubscriptionStream> streamCaptor;
 
-	private Map<String, String> props = new HashMap<>();
-	private DiffusionSourceTask task;
+    private Map<String, String> props = new HashMap<>();
+    private DiffusionSourceTask task;
 
-	private Map<String, Object> defaultMap;
-	private JSON defaultJson;
+    private Map<String, Object> defaultMap;
+    private JSON defaultJson;
 
-	@BeforeEach
-	@SuppressWarnings("unchecked")
-	public void setUp() throws Exception {
-		when(factory.connect(isA(SourceConfig.class), isA(Listener.class))).thenReturn(client);
+    @BeforeEach
+    @SuppressWarnings("unchecked")
+    public void setUp() throws Exception {
+        when(factory.connect(isA(SourceConfig.class), isA(Listener.class))).thenReturn(client);
 
-		when(goodFuture.get(isA(Long.class), isA(TimeUnit.class))).thenReturn(null);
+        when(goodFuture.get(isA(Long.class), isA(TimeUnit.class)))
+            .thenReturn(null);
 
-		props.put(DiffusionConfig.HOST, "localhost");
-		props.put(DiffusionConfig.PORT, "8080");
-		props.put(DiffusionConfig.USERNAME, "admin");
-		props.put(DiffusionConfig.PASSWORD, "password");
-		props.put(DiffusionConfig.DIFFUSION_SELECTOR, "topic");
-		props.put(DiffusionConfig.KAFKA_TOPIC, "kafka");
-		props.put(DiffusionConfig.POLL_INTERVAL, "0");
+        props.put(DiffusionConfig.HOST, "localhost");
+        props.put(DiffusionConfig.PORT, "8080");
+        props.put(DiffusionConfig.USERNAME, "admin");
+        props.put(DiffusionConfig.PASSWORD, "password");
+        props.put(DiffusionConfig.DIFFUSION_SELECTOR, "topic");
+        props.put(DiffusionConfig.KAFKA_TOPIC, "kafka");
+        props.put(DiffusionConfig.POLL_INTERVAL, "0");
 
-		task = new DiffusionSourceTask(factory);
+        task = new DiffusionSourceTask(factory);
 
-		defaultJson = jsonType.fromJsonString("{\"foo\":\"hello world\",\"bar\":123,\"baz\":[4,5,6]}");
+        defaultJson =
+            jsonType
+                .fromJsonString(
+                    "{\"foo\":\"hello world\",\"bar\":123,\"baz\":[4,5,6]}");
 
-		defaultMap = new HashMap<>();
-		defaultMap.put("foo", "hello world");
-		defaultMap.put("bar", 123);
-		defaultMap.put("baz", asList(4, 5, 6));
-	}
+        defaultMap = new HashMap<>();
+        defaultMap.put("foo", "hello world");
+        defaultMap.put("bar", 123);
+        defaultMap.put("baz", asList(4, 5, 6));
+    }
 
-	@AfterEach
-	public void after() {
-		verifyNoMoreInteractions(client, factory, goodFuture);
-	}
+    @AfterEach
+    public void after() {
+        verifyNoMoreInteractions(client, factory, goodFuture);
+    }
 
-	private void start() throws Exception {
-		doReturn(goodFuture).when(client).subscribe(isA(String.class), Mockito.any());
+    private void start() throws Exception {
+        doReturn(goodFuture).when(client).subscribe(isA(String.class),
+            Mockito.any());
 
-		task.start(props);
+        task.start(props);
 
-		verify(client).subscribe(eq("topic"), streamCaptor.capture());
-		verify(factory).connect(configCaptor.capture(), listenerCaptor.capture());
-		verify(goodFuture).get(10, TimeUnit.SECONDS);
+        verify(client).subscribe(eq("topic"), streamCaptor.capture());
+        verify(factory).connect(configCaptor.capture(),
+            listenerCaptor.capture());
+        verify(goodFuture).get(10, TimeUnit.SECONDS);
 
-		listenerCaptor.getValue().onSessionStateChanged(null, CONNECTING, CONNECTED_ACTIVE);
-	}
+        listenerCaptor
+            .getValue()
+            .onSessionStateChanged(null, CONNECTING, CONNECTED_ACTIVE);
+    }
 
-	@Test
-	public void testStart() throws Exception {
-		start();
+    @Test
+    public void testStart() throws Exception {
+        start();
 
-		SourceConfig config = configCaptor.getValue();
+        SourceConfig config = configCaptor.getValue();
 
-		assertEquals(config, new SourceConfig(props));
+        assertEquals(config, new SourceConfig(props));
 
-		verify(client).subscribe(eq("topic"), streamCaptor.capture());
-	}
+        verify(client).subscribe(eq("topic"), streamCaptor.capture());
+    }
 
-	@Test
-	public void testStop() throws Exception {
-		testStart();
+    @Test
+    public void testStop() throws Exception {
+        testStart();
 
-		task.stop();
+        task.stop();
 
-		verify(client).close();
-	}
+        verify(client).close();
+    }
 
-	@Test
-	public void testThrowsConnectExceptionWhenClosed() throws Exception {
-		start();
+    @Test
+    public void testThrowsConnectExceptionWhenClosed() throws Exception {
+        start();
 
-		listenerCaptor.getValue().onSessionStateChanged(null, CONNECTED_ACTIVE, CLOSED_BY_SERVER);
+        listenerCaptor
+            .getValue()
+            .onSessionStateChanged(null, CONNECTED_ACTIVE, CLOSED_BY_SERVER);
 
-		when(client.getSessionState()).thenReturn(CLOSED_BY_SERVER);
+        when(client.getSessionState()).thenReturn(CLOSED_BY_SERVER);
 
-		assertThrows(ConnectException.class, () -> task.poll());
+        assertThrows(ConnectException.class, () -> task.poll());
 
-		verify(client).getSessionState();
-	}
+        verify(client).getSessionState();
+    }
 
-	@Test
-	public void testThrowsRetriableExceptionWhenDisconnected() throws Exception {
-		start();
+    @Test
+    public void testThrowsRetriableExceptionWhenDisconnected() throws Exception {
+        start();
 
-		listenerCaptor.getValue().onSessionStateChanged(null, CONNECTED_ACTIVE, RECOVERING_RECONNECT);
+        listenerCaptor
+            .getValue()
+            .onSessionStateChanged(null, CONNECTED_ACTIVE,
+                RECOVERING_RECONNECT);
 
-		when(client.getSessionState()).thenReturn(RECOVERING_RECONNECT);
+        when(client.getSessionState()).thenReturn(RECOVERING_RECONNECT);
 
-		assertThrows(RetriableException.class, () -> task.poll());
-		verify(client).getSessionState();
-	}
+        assertThrows(RetriableException.class, () -> task.poll());
+        verify(client).getSessionState();
+    }
 
-	@Test
-	public void testPollNoMessages() throws Exception {
-		start();
+    @Test
+    public void testPollNoMessages() throws Exception {
+        start();
 
-		assertEquals(0, task.poll().size());
-	}
+        assertEquals(0, task.poll().size());
+    }
 
-	@Test
-	public void testPollSingleMessage() throws Exception {
-		start();
+    @Test
+    public void testPollSingleMessage() throws Exception {
+        start();
 
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
 
-		List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = task.poll();
 
-		assertEquals(1, records.size());
+        assertEquals(1, records.size());
 
-		assertRecord(records.get(0), "kafka", singletonMap("topic", "topic"), STRING_SCHEMA, "topic", null, defaultMap);
-	}
+        assertRecord(
+            records.get(0),
+            "kafka",
+            singletonMap("topic", "topic"),
+            STRING_SCHEMA,
+            "topic",
+            null,
+            defaultMap);
+    }
 
-	@Test
-	public void testPollSingleMessageWithTopicToken() throws Exception {
-		props.put(DiffusionConfig.KAFKA_TOPIC, "kafka/${topic}");
+    @Test
+    public void testPollSingleMessageWithTopicToken() throws Exception {
+        props.put(DiffusionConfig.KAFKA_TOPIC, "kafka/${topic}");
 
-		start();
+        start();
 
-		streamCaptor.getValue().onMessage("foo", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("foo", topicSpec, defaultJson);
 
-		List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = task.poll();
 
-		assertEquals(1, records.size());
+        assertEquals(1, records.size());
 
-		assertRecord(records.get(0), "kafka_foo", singletonMap("topic", "foo"), STRING_SCHEMA, "foo", null, defaultMap);
-	}
+        assertRecord(
+            records.get(0),
+            "kafka_foo",
+            singletonMap("topic", "foo"),
+            STRING_SCHEMA,
+            "foo",
+            null,
+            defaultMap);
+    }
 
-	@Test
-	public void testPollSingleMessageWithUnknownToken() throws Exception {
-		props.put(DiffusionConfig.KAFKA_TOPIC, "kafka/${unknown}");
+    @Test
+    public void testPollSingleMessageWithUnknownToken() throws Exception {
+        props.put(DiffusionConfig.KAFKA_TOPIC, "kafka/${unknown}");
 
-		start();
+        start();
 
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
 
-		List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = task.poll();
 
-		assertEquals(1, records.size());
+        assertEquals(1, records.size());
 
-		assertRecord(records.get(0), "kafka_${unknown}", singletonMap("topic", "topic"), STRING_SCHEMA, "topic", null, defaultMap);
-	}
+        assertRecord(
+            records.get(0),
+            "kafka_${unknown}",
+            singletonMap("topic", "topic"),
+            STRING_SCHEMA,
+            "topic",
+            null,
+            defaultMap);
+    }
 
-	@Test
-	public void testPollMultipleMessages() throws Exception {
-		start();
+    @Test
+    public void testPollMultipleMessages() throws Exception {
+        start();
 
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
 
-		List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = task.poll();
 
-		assertEquals(4, records.size());
+        assertEquals(4, records.size());
 
-		for (SourceRecord record : records) {
-			assertRecord(record, "kafka", singletonMap("topic", "topic"), STRING_SCHEMA, "topic", null, defaultMap);
-		}
-	}
+        for (SourceRecord record : records) {
+            assertRecord(
+                record,
+                "kafka",
+                singletonMap("topic", "topic"),
+                STRING_SCHEMA,
+                "topic",
+                null,
+                defaultMap);
+        }
+    }
 
-	@Test
-	public void testDrainQueueWhileDisconnected() throws Exception {
-		start();
+    @Test
+    public void testDrainQueueWhileDisconnected() throws Exception {
+        start();
 
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
 
-		listenerCaptor.getValue().onSessionStateChanged(null, CONNECTED_ACTIVE, CLOSED_BY_SERVER);
+        listenerCaptor
+            .getValue()
+            .onSessionStateChanged(null, CONNECTED_ACTIVE, CLOSED_BY_SERVER);
 
-		when(client.getSessionState()).thenReturn(CLOSED_BY_SERVER);
+        when(client.getSessionState()).thenReturn(CLOSED_BY_SERVER);
 
-		List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = task.poll();
 
-		assertEquals(1, records.size());
+        assertEquals(1, records.size());
 
-		assertRecord(records.get(0), "kafka", singletonMap("topic", "topic"), STRING_SCHEMA, "topic", null, defaultMap);
+        assertRecord(
+            records.get(0),
+            "kafka",
+            singletonMap("topic", "topic"),
+            STRING_SCHEMA,
+            "topic",
+            null,
+            defaultMap);
 
-		assertThrows(ConnectException.class, () -> task.poll());
+        assertThrows(ConnectException.class, () -> task.poll());
 
-		verify(client).getSessionState();
-	}
+        verify(client).getSessionState();
+    }
 
-	@Test
-	public void testPollConstrainsBatchSizeMessages() throws Exception {
-		props.put(DiffusionConfig.POLL_BATCH_SIZE, "1");
+    @Test
+    public void testPollConstrainsBatchSizeMessages() throws Exception {
+        props.put(DiffusionConfig.POLL_BATCH_SIZE, "1");
 
-		start();
+        start();
 
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
-		streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
+        streamCaptor.getValue().onMessage("topic", topicSpec, defaultJson);
 
-		for (int i = 0; i < 4; ++i) {
-			List<SourceRecord> records = task.poll();
+        for (int i = 0; i < 4; ++i) {
+            List<SourceRecord> records = task.poll();
 
-			assertEquals(1, records.size());
+            assertEquals(1, records.size());
 
-			assertRecord(records.get(0), "kafka", singletonMap("topic", "topic"), STRING_SCHEMA, "topic", null, defaultMap);
-		}
+            assertRecord(
+                records.get(0),
+                "kafka",
+                singletonMap("topic", "topic"),
+                STRING_SCHEMA,
+                "topic",
+                null,
+                defaultMap);
+        }
 
-		assertEquals(0, task.poll().size());
-	}
+        assertEquals(0, task.poll().size());
+    }
 
-	private void assertRecord(SourceRecord record, String topic, Object partition, Schema keySchema, Object key, Schema valueSchema, Object value) {
-		assertEquals(topic, record.topic());
-		assertEquals(keySchema, record.keySchema());
-		assertEquals(key, record.key());
-		assertEquals(valueSchema, record.valueSchema());
-		assertEquals(value, record.value());
-	}
+    private void assertRecord(
+        SourceRecord record,
+        String topic,
+        Object partition,
+        Schema keySchema,
+        Object key,
+        Schema valueSchema,
+        Object value) {
+
+        assertEquals(topic, record.topic());
+        assertEquals(keySchema, record.keySchema());
+        assertEquals(key, record.key());
+        assertEquals(valueSchema, record.valueSchema());
+        assertEquals(value, record.value());
+    }
 }
