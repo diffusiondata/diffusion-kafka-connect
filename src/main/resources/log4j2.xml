@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="warn"
+               name="Diffusion Kafka Connector"
+               shutdownHook="disable"
+               monitorInterval="30">
+
+    <Properties>
+        <Property name="log.dir">${sys:connect.home:-.}/logs</Property>
+
+        <Property name="pattern">%date{yyyy-MM-dd HH:mm:ss.SSS}|%level|%thread|%replace{%msg}{\|}{}|%logger%n%xEx
+        </Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="console">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+
+        <RollingRandomAccessFile name="file" fileName="${log.dir}/diffusion-kafka-connector.log"
+                                 filePattern="${log.dir}/$${date:yyyy-MM}/diffusion-kafka-connector-%d{MM-dd-yyyy}-%i.log.gz">
+
+            <PatternLayout pattern="${pattern}"/>
+
+            <Policies>
+                <OnStartupTriggeringPolicy/>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Root>
+        <Logger name="com.diffusiondata.connect" level="info"/>
+        <Logger name="com.pushtechnology.diffusion" level="info"/>
+        <Logger name="org.apache.kafka" level="info"/>
+    </Loggers>
+</Configuration>

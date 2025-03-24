@@ -1,204 +1,251 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.pushtechnology.diffusion.adaptors</groupId>
-	<artifactId>diffusion-kafka-connect</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>Diffusion Kafka Connector</name>
-	<description>Connector to Diffusion for use with Kafka Connect</description>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+    <groupId>com.diffusiondata.diffusion.adapters</groupId>
+    <artifactId>diffusion-kafka-connect</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Diffusion Kafka Connector</name>
+    <description>Connector to Diffusion for use with Kafka Connect</description>
 
-		<diffusion.version>6.1.0</diffusion.version>
-		<mockito.version>1.10.19</mockito.version>
-		<kafka.version>1.1.0</kafka.version>
-		<junit.version>4.12</junit.version>
-	</properties>
+    <properties>
+        <maven.compiler.release>11</maven.compiler.release>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>connect-api</artifactId>
-			<version>${kafka.version}</version>
-			<scope>provided</scope>
-		</dependency>
+        <diffusion.version>6.11.5</diffusion.version>
+        <kafka.version>3.9.0</kafka.version>
+        <log4j-slf4j2-impl.version>2.22.1</log4j-slf4j2-impl.version>
+        <slf4j-api.version>2.0.11</slf4j-api.version>
 
-		<dependency>
-			<groupId>com.pushtechnology.diffusion</groupId>
-			<artifactId>diffusion-client</artifactId>
-			<version>${diffusion.version}</version>
-		</dependency>
+        <junit-jupiter.version>5.10.1</junit-jupiter.version>
+        <mockito-junit-jupiter.version>4.11.0</mockito-junit-jupiter.version>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
+        <build-rules.version>1.68</build-rules.version>
+        <checkstyle.version>9.3</checkstyle.version>
+        <spotbugs.version>4.2.3</spotbugs.version>
+        <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
+		<io.confluent.version>0.12.0</io.confluent.version>
 
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>${mockito.version}</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    </properties>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.15</version>
-				<configuration>
-					<argLine>${surefireArgLine}</argLine>
-					<skipTests>${skip.unit.tests}</skipTests>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.15</version>
-				<executions>
-					<execution>
-						<id>integration-tests</id>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-							<argLine>${failsafeArgLine}</argLine>
-							<skipTests>${skip.integration.tests}</skipTests>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.2</version>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>connect-api</artifactId>
+                <version>${kafka.version}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.diffusiondata.diffusion</groupId>
+                <artifactId>diffusion-client-with-dependencies</artifactId>
+                <version>${diffusion.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
+                <version>${log4j-slf4j2-impl.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito-junit-jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-				<executions>
-					<execution>
-						<id>pre-unit-test</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-						<configuration>
-							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<propertyName>surefireArgLine</propertyName>
-						</configuration>
-					</execution>
-					<execution>
-						<id>post-unit-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.diffusiondata.diffusion</groupId>
+            <artifactId>diffusion-client-with-dependencies</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+        </dependency>
+    </dependencies>
 
-			<plugin>
-				<groupId>io.confluent</groupId>
-				<version>0.10.0</version>
-				<artifactId>kafka-connect-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>kafka-connect</goal>
-						</goals>
-						<configuration>
-							<title>Kafka Connect Diffusion</title>
-							<documentationUrl>https://docs.pushtechnology.com</documentationUrl>
-							<description>
-								The Diffusion Connector allows you to send data from
-								Kafka to Diffusion, and vice-versa.
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco-maven-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>pre-unit-test</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                            <configuration>
+                                <destFile>
+                                    ${project.build.directory}/coverage-reports/jacoco-ut.exec
+                                </destFile>
+                                <propertyName>surefireArgLine</propertyName>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>post-unit-test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                            <configuration>
+                                <dataFile>
+                                    ${project.build.directory}/coverage-reports/jacoco-ut.exec
+                                </dataFile>
+                                <outputDirectory>
+                                    ${project.reporting.outputDirectory}/jacoco-ut
+                                </outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
-								Messages receieved from Kafka will be serialised to JSON topics, which
-								can then be consumed
-								by any Diffusion clients.
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>io.confluent</groupId>
+                <version>${io.confluent.version}</version>
+                <artifactId>kafka-connect-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>kafka-connect</goal>
+                        </goals>
+                        <configuration>
+                            <title>Kafka Connect Diffusion</title>
+                            <documentationUrl>https://docs.diffusiondata.com
+                            </documentationUrl>
+                            <description>
+                                The Diffusion Connector allows you to send data
+                                from
+                                Kafka to Diffusion, and vice-versa.
 
-								Updates published to JSON topics in Diffusion can be converted to
-								Kafka-compatible values,
-								and then published to Kafka topics with
-								appropriate schema.
-							</description>
+                                Messages received from Kafka will be serialised
+                                to JSON topics, which
+                                can then be consumed
+                                by any Diffusion clients.
 
-							<componentTypes>
-								<componentType>sink</componentType>
-								<componentType>source</componentType>
-							</componentTypes>
+                                Updates published to JSON topics in Diffusion
+                                can be converted to
+                                Kafka-compatible values,
+                                and then published to Kafka topics with
+                                the appropriate schema.
+                            </description>
 
-							<ownerUsername>pushtechnology</ownerUsername>
-							<ownerType>organization</ownerType>
-							<ownerName>Push Technology</ownerName>
-							<ownerUrl>https://www.pushtechnology.com/</ownerUrl>
+                            <componentTypes>
+                                <componentType>sink</componentType>
+                                <componentType>source</componentType>
+                            </componentTypes>
 
-							<tags>
-								<tag>diffusion</tag>
-							</tags>
+                            <ownerUsername>diffusiondata</ownerUsername>
+                            <ownerType>organization</ownerType>
+                            <ownerName>DiffusionData</ownerName>
+                            <ownerUrl>https://www.diffusiondata.com/</ownerUrl>
 
-							<confluentControlCenterIntegration>true</confluentControlCenterIntegration>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                            <tags>
+                                <tag>diffusion</tag>
+                            </tags>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<createDependencyReducedPom>true</createDependencyReducedPom>
-					<filters>
-						<filter>
-							<artifact>*:*</artifact>
-							<excludes>
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-							</excludes>
-						</filter>
-					</filters>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<artifactSet>
-								<excludes>
-									<exclude>com.fasterxml.jackson.core:jackson-core:jar:*</exclude>
-								</excludes>
-							</artifactSet>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer" />
-							</transformers>
-							<finalName>diffusion-kafka-connector</finalName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                            <confluentControlCenterIntegration>true
+                            </confluentControlCenterIntegration>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-		</plugins>
-	</build>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <createDependencyReducedPom>true
+                    </createDependencyReducedPom>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>
+                                        com.fasterxml.jackson.core:jackson-core:jar:*
+                                    </exclude>
+                                </excludes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                            </transformers>
+                            <finalName>diffusion-kafka-connector</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-	<repositories>
-		<repository>
-			<id>push-repository</id>
-			<url>https://download.pushtechnology.com/maven/</url>
-		</repository>
-	</repositories>
+        </plugins>
+    </build>
 </project>

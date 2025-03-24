@@ -1,13 +1,12 @@
 ### Introduction
 
-The [Diffusion Kafka Adapter](https://www.pushtechnology.com/extending-kafka) is a connector to be used with [Kafka Connect](https://www.confluent.io/confluent-platform-push-technology). Source and sink connectors are provided to publish messages from [Kafka](http://kafka.apache.org) to [Diffusion](https://www.pushtechnology.com) and vice versa. 
+The [Diffusion Kafka Connector](https://github.com/diffusiondata/diffusion-kafka-connect) is a Kafka connector application 
+that can be used to integrate Kafka with Diffusion server. Source and sink connectors are provided to publish 
+messages from [Kafka](http://kafka.apache.org) topics to [Diffusion](https://www.diffusiondata.com) topics and vice versa. 
 
 Connecting a Diffusion server enables real-time streaming of data stored in Kafka to endpoints like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
-The adapter is [verified Gold](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both Diffusion and Diffusion Cloud, versions 6.0 and above.
-
-![Gold verified Confluent integration](/img/verified-gold.jpg)
-
+The adapter is [verified](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both on prem Diffusion and Diffusion Cloud, versions 6.9 and above.
 
 ### Building
 
@@ -19,14 +18,13 @@ These instructions assume you are using [Maven](https://maven.apache.org/).
 
 2.  Make the jar that contains the connector:
 
-    `mvn package`
+    `mvn clean package`
 
 The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### Pre-Running Steps
 
-1.  Set up an instance of [Diffusion](https://www.pushtechnology.com/developers/release/latest/) or [Diffusion Cloud](https://www.pushtechnology.com/developers/cloud/latest/) that will be 
-    accessible from the machine on which you are running Kafka.
+1.  Set up an instance of [Diffusion](https://www.diffusiondata.com/developers/release/latest/) or [Diffusion Cloud](https://www.diffusiondata.com/developers/cloud/latest/) that should be accessible from the machine on which you are running Kafka.
 
 2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
     that this connector will be configured with. If you intend to run the sink connector,
@@ -35,15 +33,31 @@ The resulting jar is at target/diffusion-kafka-connector.jar
 
 ### Running a Connector
 
-1.  Copy the diffusion-connector.jar to whichever directory you have configured Kafka
+1.  Copy the diffusion-kafka-connector.jar to whichever directory you have configured Kafka
     to load plugins from.
 
-2.  If running this connector within Confluent Platform, simply use the dashboard to 
+2.  If running this connector within Confluent Platform, use the dashboard to 
     create a new sink/source connector. The dashboard will provide a configuration
     UI that contains all required fields.
     
+    > NOTE: If using the [confluent docker compose file](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml), 
+the path where the plugin (diffusion-kafka-connector.jar) is available can be mounted in the volume of the `connect` docker container in the path configured for connectors via `CONNECT_PLUGIN_PATH` var, as follows :
+
+    ```JSON
+      ...
+      ...
+      connect:
+        image: cnfldemos/cp-server-connect-datagen:0.6.4-7.6.0
+        environment:
+          ...
+          CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+        volumes:
+          # The diffusion-kafka-connector.jar would be in the "/local/kafka/connectPlugin/plugins" path
+          - /local/kafka/connectPlugin/plugins:/usr/share/confluent-hub-components
+    ```
+    
 3.  If you are running this connector against vanilla Kafka, create a configuration
-	file for the Diffusion connector and copy it to the place where you will run 
+	file for the Diffusion Kafka connector and copy it to the place where you will run 
 	Kafka connect. The configuration should set up the proper Kafka and Diffusion 
 	topic patterns, as well as connection and authentication details for Diffusion.
     Sample configuration files for the source and sink connectors are provided
