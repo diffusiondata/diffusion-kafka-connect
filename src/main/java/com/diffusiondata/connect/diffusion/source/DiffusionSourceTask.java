@@ -155,7 +155,9 @@ public class DiffusionSourceTask extends SourceTask implements Listener {
 
     @Override
     public void stop() {
-        client.close();
+        if (client != null) {
+            client.close();
+        }
     }
 
     @Override

@@ -1,0 +1,14 @@
+{
+  "name": "DiffusionSourceConnector",
+  "config": {
+    "tasks.max": "1",
+    "connector.class": "com.diffusiondata.connect.diffusion.source.DiffusionSourceConnector",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "kafka.topic": "kafka",
+    "diffusion.url": "ws://diffusion:8080",
+    "diffusion.username": "admin",
+    "diffusion.password": "password",
+    "diffusion.selector": "?source/kafka/.*"
+  }
+}

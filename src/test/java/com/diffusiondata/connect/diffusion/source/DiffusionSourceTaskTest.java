@@ -86,8 +86,7 @@ public class DiffusionSourceTaskTest {
         when(goodFuture.get(isA(Long.class), isA(TimeUnit.class)))
             .thenReturn(null);
 
-        props.put(DiffusionConfig.HOST, "localhost");
-        props.put(DiffusionConfig.PORT, "8080");
+        props.put(DiffusionConfig.DIFFUSION_URL, "ws://localhost:8080");
         props.put(DiffusionConfig.USERNAME, "admin");
         props.put(DiffusionConfig.PASSWORD, "password");
         props.put(DiffusionConfig.DIFFUSION_SELECTOR, "topic");
