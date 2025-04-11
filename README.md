@@ -10,13 +10,13 @@ messages from [Kafka](http://kafka.apache.org) topics to [Diffusion](https://www
 Connecting a Diffusion server enables real-time streaming of data stored in Kafka 
 to edge clients like web browsers, mobile apps, and IoT devices, reliably and at scale.
 
-The connector is [verified](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both on prem Diffusion and Diffusion Cloud, versions 6.9 and above.
+The connector is [verified](https://www.confluent.io/hub/push/diffusion-connector) by the Confluent Verified Integrations Program. It is compatible with both on-prem Diffusion and Diffusion Cloud, versions 6.9 and above.
 
 ## Building
 
 ### Prerequisites
-- Maven (min 3.8)
-- Java (min java 11)
+- Maven (minimum 3.8)
+- Java (minimum java 11)
 1.  Clone the repository:
 
     `git clone https://github.com/pushtechnology/diffusion-kafka-connect`
@@ -28,29 +28,51 @@ The connector is [verified](https://www.confluent.io/hub/push/diffusion-connecto
 The resulting jar is at `target/diffusion-kafka-connector.jar`
 
 This will also create `target/components/packages/DiffusionData-Diffusion-Connector-1.0.0.zip` file.
-This `.zip` file can be used to add the Diffusion Kafka connector in the Confluent platform on prem 
+This `.zip` file can be used to add the Diffusion Kafka connector in the Confluent platform on-prem 
 or in Confluent cloud.
 
 _Note_: This version of the connector uses Kafka connect API version: 3.9.0.
 
 ## Pre-requisite to run the connector
 
-1. Java environment (min Java 11) 
+1. Java environment (minimum Java 11) 
 
-2. Set up an instance of [Diffusion](https://www.diffusiondata.com/developers/release/latest/) or [Diffusion Cloud](https://www.diffusiondata.com/developers/cloud/latest/) that should be accessible from the machine on which you are running Kafka.
+2. An instance of the Diffusion server
 
-2.  Ensure that your instance of Diffusion can authenticate the principal/password pair
-    that this connector will be configured with. If you intend to run the sink connector,
-    ensure that this principal has sufficient permissions to create topics and publish
-    values under paths that will be mapped from Kafka.
+3. An instance of the Kafka server configured to run Kafka connectors
+
+## Setting up the Diffusion server
+The Diffusion server can be run locally with an installer or as a Docker image. 
+See [here](https://docs.diffusiondata.com/docs/quickstartguide/onprem/getting-started/install.html) 
+for more details. 
+
+_Note_: [A docker compose file](./docker-compose.yml) is provided that also includes a 
+Diffusion image together with other components required to start the Diffusion 
+Kafka connector.
+
+DiffusionData also provides a fully managed 
+[SaaS cloud offering](https://docs.diffusiondata.com/docs/quickstartguide/cloud/getting-started/account.html).
+
+To manage the features of the server including Diffusion topics, [Diffusion Management Console](https://docs.diffusiondata.com/docs/quickstartguide/onprem/console/console-overview.html) can be used. 
+
+When running the server locally, a default user is available with the principal
+set to `admin` and the password set to `password`. This user has administrator-level
+permissions. These credentials can be used in the connector configuration to
+establish a connection with the server. A sample configuration is provided
+below.
+
+When using the Diffusion server in the cloud, a user (principal) must be created
+with the appropriate permissions to authenticate the connector. If you intend to
+run the sink connector, ensure that this principal has sufficient permissions to
+create topics and publish values under paths that will be mapped from Kafka.
 
 ## Running the Connector
 
 ## Locally with Confluent stack
 
-To run the connector locally, run the provided sample `docker-compose.yml` file 
-to start up Kafka, Diffusion and other required components. This docker file has 
-been created using the one provided by [confluent](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml).
+To run the connector locally, run the provided sample [docker-compose.yml](docker-compose.yml) file 
+to start up Kafka, Diffusion, and other required components. This docker file has 
+been created using the one provided by [Confluent](https://github.com/confluentinc/cp-all-in-one/blob/7.9.0-post/cp-all-in-one/docker-compose.yml).
 
 > **_NOTE:_** The `diffusion-kafka-connector.jar` file created during the build should be 
  added into the folder specified in the volume mount path for the `connect` containers.
@@ -82,14 +104,17 @@ Here's the sample configuration to add a Sink connector via the REST API or in v
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter.schemas.enable": "false",
-    "topics": "kafka",
+    "topics": "price",
     "diffusion.url": "ws://diffusion:8080",
     "diffusion.username": "admin",
     "diffusion.password": "password",
-    "diffusion.destination": "kafka/${topic}/${key}"
+    "diffusion.destination": "kafka/${topic}"
   }
 }
 ```
+Once the sink connector instance is added with the above configuration, when the 
+Kafka topic `price` is updated, this is reflected in the Diffusion topic `kafka/price`. 
+This can be viewed from the *Topics* tab in the [Diffusion Management Console](https://docs.diffusiondata.com/docs/latest/manual/html/administratorguide/systemmanagement/r_diffusion_monitoring_console.html).
 
 Here's the sample configuration to add a Source connector the REST API or in via the Control centre:
 
@@ -101,7 +126,7 @@ Here's the sample configuration to add a Source connector the REST API or in via
     "connector.class": "com.diffusiondata.connect.diffusion.source.DiffusionSourceConnector",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "kafka.topic": "kafka",
+    "kafka.topic": "diffusion.price",
     "diffusion.url": "ws://diffusion:8080",
     "diffusion.username": "admin",
     "diffusion.password": "password",
@@ -110,6 +135,11 @@ Here's the sample configuration to add a Source connector the REST API or in via
 }
 ```
 
+Once the source connector instance is added with the above configuration, when any 
+Diffusion topic matching the `?source/kafka/.*` topic selector is updated, its 
+value will be reflected in the `diffusion.price` kafka topic. A Diffusion topic matching 
+that topic selector such as `source/kafka/price` can be created from the  *Topics* 
+tab in the [Diffusion Management Console](https://docs.diffusiondata.com/docs/latest/manual/html/administratorguide/systemmanagement/r_diffusion_monitoring_console.html).
 
 ## In Confluent Cloud as Custom Connector 
 The connector can be used in Confluent Cloud as a [Custom Connector](https://docs.confluent.io/cloud/current/connectors/bring-your-connector/overview.html).
