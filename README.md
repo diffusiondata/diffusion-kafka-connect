@@ -320,4 +320,3 @@ of connector tasks is difficult to achieve. The general behaviour should be unde
 ### License
 
 This connector is available under the Apache License 2.0.
- 
