@@ -95,6 +95,8 @@ It is also possible to add and manage connector instances using REST APIs. See [
 
 Here's the sample configuration to add a Sink connector via the REST API or in via the Control centre:
 
+> **_NOTE:_** replace `wss://<diffusion_server_hostname>` with the appropriate Diffusion server URL.
+
 ```json
 {
   "name": "DiffusionSinkConnector",
@@ -105,7 +107,7 @@ Here's the sample configuration to add a Sink connector via the REST API or in v
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter.schemas.enable": "false",
     "topics": "price",
-    "diffusion.url": "ws://diffusion:8080",
+    "diffusion.url": "wss://<diffusion_server_hostname>",
     "diffusion.username": "admin",
     "diffusion.password": "password",
     "diffusion.destination": "kafka/${topic}"
@@ -127,7 +129,7 @@ Here's the sample configuration to add a Source connector the REST API or in via
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "kafka.topic": "diffusion.price",
-    "diffusion.url": "ws://diffusion:8080",
+    "diffusion.url": "wss://<diffusion_server_hostname>",
     "diffusion.username": "admin",
     "diffusion.password": "password",
     "diffusion.selector": "?source/kafka/.*"
@@ -168,7 +170,7 @@ You can then add an instance of the connector.
     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "kafka.topic": "kafka",
-    "diffusion.url": "ws://localhost:8080",
+    "diffusion.url": "wss://<diffusion_server_hostname>",
     "diffusion.username": "admin",
     "diffusion.password": "password",
     "diffusion.selector": "?source/kafka/.*"
@@ -185,7 +187,7 @@ You can then add an instance of the connector.
       "value.converter": "org.apache.kafka.connect.json.JsonConverter",
       "value.converter.schemas.enable": "false",
       "topics": "kafka",
-      "diffusion.url": "ws://localhost:8080",
+      "diffusion.url": "wss://<diffusion_server_hostname>",
       "diffusion.username": "admin",
       "diffusion.password": "password",
       "diffusion.destination": "kafka/${topic}/${key}"
